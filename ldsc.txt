@@ -125,7 +125,7 @@ data/EPs/annot_files/PsychENCODE_DER_03b_PFC_enhancers_18k_100flank.,\
 data/EPs/annot_files/ALL_BRAIN_EPs_1569_100flank.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/Harmston_GRBs_hg19_galGal4.\
-	--out stratified_LDSC_out/2023_01_18_baseline_myGroups_100flank
+	--out stratified_LDSC_out/2023_01_18_NEURAL_100flank
 
 python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 	--h2 /mnt/storage/emanuele/ldsc_py2.7/gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3.sumstats.gz\
@@ -134,9 +134,10 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC.\
   --ref-ld-chr data/baseline_Osimo/baseline.,\
 data/EPs/annot_files/13k_CARDIAC_ENH_EXP_significant_ES_significant_contact_EPs.,\
+data/EPs/annot_files/40k_notCARDIAC_Enhancers.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/Harmston_GRBs_hg19_galGal4.\
-	--out stratified_LDSC_out/2023_01_18_baseline_myGroups_100flank
+	--out stratified_LDSC_out/2023_01_18_CARDIAC_100flank
 
 
 # data/EPs/annot_files/uniq_ALL_BRAIN_EPs.bed.,
