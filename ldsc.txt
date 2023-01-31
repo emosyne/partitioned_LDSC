@@ -58,9 +58,9 @@ do
     echo $CHR
     #Creating an annot file for each chr
     python /mnt/storage/emanuele/ldsc_py2.7/make_annot.py \
-		  --bed-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/uniq_HEART_EP_eQTL.bed \
+		  --bed-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/2023-01-30_687_BRAIN_EP_eQTL_100flank.bed \
 		  --bimfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR.bim \
-		  --annot-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.$CHR.annot.gz
+		  --annot-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.$CHR.annot.gz
   # done
     #Computing LD scores for each chr
     python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py\
@@ -68,8 +68,8 @@ do
       --thin-annot\
       --bfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
       --ld-wind-cm 1\
-      --annot /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.$CHR.annot.gz\
-      --out /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.$CHR
+      --annot /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.$CHR.annot.gz\
+      --out /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.$CHR
 done
 
 
@@ -121,15 +121,20 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
   --ref-ld-chr data/baseline_Osimo/baseline.,\
 data/EPs/annot_files/NEURAL_8k_GRB_Enhancers.,\
 data/EPs/annot_files/NEURAL_14k_noGRB_Enhancers.,\
+data/EPs/annot_files/21k_NEURAL_ENH_EXP_significant_ES_significant_contact_EPs.,\
 data/EPs/annot_files/notNeural_20k_100flank.,\
 data/EPs/annot_files/PsychENCODE_DER_03b_PFC_enhancers_18k_100flank.,\
-data/EPs/annot_files/ALL_BRAIN_EPs_1569_100flank.,\
+data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
 data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out stratified_LDSC_out/2023_01_30_NEURAL_GRBorNot_100flank
-# data/EPs/annot_files/21k_NEURAL_ENH_EXP_significant_ES_significant_contact_EPs.,\
+	--out stratified_LDSC_out/2023_01_31_NEURAL_GRBorNot_100flank
+# 
 # data/EPs/annot_files/Harmston_GRBs_hg19_galGal4.,\
+
+storage 
+cd ldsc_py2.7
+conda activate ldsc
 
 python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 	--h2 /mnt/storage/emanuele/ldsc_py2.7/gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3.sumstats.gz\
@@ -137,6 +142,7 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 	--overlap-annot \
 	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC.\
   --ref-ld-chr data/baseline_Osimo/baseline.,\
+data/EPs/annot_files/9k_CARDIAC_noFibro_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_3k_GRB_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_6k_noGRB_Enhancers.,\
 data/EPs/annot_files/40k_notCARDIAC_Enhancers.,\
@@ -144,9 +150,9 @@ data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
 data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.,\
 data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out stratified_LDSC_out/2023_01_30_CARDIAC_noFibro_GRBorNot_100flank
+	--out stratified_LDSC_out/2023_01_31_CARDIAC_noFibro_GRBorNot_100flank
 # data/EPs/annot_files/13k_CARDIAC_ENH_EXP_significant_ES_significant_contact_EPs.,\
-# data/EPs/annot_files/9k_CARDIAC_noFibro_Enhancers.,\
+# 
 
 
 
