@@ -14,7 +14,7 @@ results$Category <- sub("L2_0", "", results$Category)
 theme_set(theme_minimal())
 
 pdf(file = paste0("/Users/eosimo/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/", Sys.Date(), 
-                  "_NEURAL_GRBorNot_100flank_2.pdf"), 
+                  "_NEURAL_GRBorNot_100flank.pdf"), 
     width = 15, height = 10)
 ggplot(aes(y=Enrichment, x = forcats::fct_rev(forcats::fct_inorder(Category)), fill = Enrichment_p), data= results)+
   #facet_grid(cols = vars(name), scales="free")+
@@ -57,7 +57,7 @@ results$Category <- sub("L2_0", "", results$Category)
 theme_set(theme_minimal())
 
 pdf(file = paste0("/Users/eosimo/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/", Sys.Date(), 
-                  "_CARDIAC_noFibro_GRBorNot_100flank_2.pdf"), 
+                  "_CARDIAC_noFibro_GRBorNot_100flank.pdf"), 
     width = 15, height = 10)
 ggplot(aes(y=Enrichment, x = forcats::fct_rev(forcats::fct_inorder(Category)), fill = Enrichment_p), data= results)+
   #facet_grid(cols = vars(name), scales="free")+
