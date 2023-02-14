@@ -124,9 +124,9 @@ do
     echo $CHR
     #Creating an annot file for each chr
     python /mnt/storage/emanuele/ldsc_py2.7/make_annot.py \
-		  --bed-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/2023-01-30_687_BRAIN_EP_eQTL_100flank.bed \
+		  --bed-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/NEURAL_14k_noGRB_significant_EPs.bed \
 		  --bimfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR.bim \
-		  --annot-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.$CHR.annot.gz
+		  --annot-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.$CHR.annot.gz
   # done
     #Computing LD scores for each chr
     python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py\
@@ -134,8 +134,8 @@ do
       --thin-annot\
       --bfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
       --ld-wind-cm 1\
-      --annot /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.$CHR.annot.gz\
-      --out /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.$CHR
+      --annot /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.$CHR.annot.gz\
+      --out /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.$CHR
 done
 
 
@@ -186,7 +186,7 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC.\
   --ref-ld-chr data/baseline_Osimo/baseline.,\
 data/EPs/annot_files/NEURAL_8k_GRB_Enhancers.,\
-data/EPs/annot_files/NEURAL_14k_noGRB_Enhancers.,\
+data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.,\
 data/EPs/annot_files/21k_NEURAL_ENH_EXP_significant_ES_significant_contact_EPs.,\
 data/EPs/annot_files/notNeural_20k_100flank.,\
 data/EPs/annot_files/PsychENCODE_DER_03b_PFC_enhancers_18k_100flank.,\
@@ -194,7 +194,7 @@ data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
 data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out stratified_LDSC_out/2023_01_31_NEURAL_GRBorNot_100flank
+	--out stratified_LDSC_out/2023_02_14_NEURAL_GRBorNot_100flank_fix14k
 
 
 storage 
