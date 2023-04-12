@@ -4,5 +4,5 @@
 
 This repository contains three files, which correspond to work packages:
 
-- 1_enhancer_list_generation is R code for generating tissue-expressed lists of enhancers based on AR+C and FANTOM5 annotations.
+- _1_enhancer_list_generation_ is R code for generating tissue-expressed lists of enhancers based on AR+C and FANTOM5 annotations.
 - sfgd
