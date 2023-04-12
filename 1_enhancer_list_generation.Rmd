@@ -11,419 +11,92 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#export per enh annotations for weighting ORs
-8 Dec 22 post Radina's file update
-restart R
-```{r 8 Dec 22 post Radina's file update - and with flanking sequences per enh }
+# Import and annotate tissue-specific enhancers
+
+## PER ENH COORDINATES AND ADDING FLANK #######################################
+### ONLY RUN ONCE TO ADD FLANKING REGIONS
+```{r }
 library(tidyverse)
 library(data.table)
-#import annotation from Ensembl
-source("Ensembl_Mart_geneinfo.R")
-(bm <- mart_geneinfo())
-library(CAGEr)
-data("FANTOM5humanSamples")
+# #import annotation from Ensembl
+# source("resources/Ensembl_Mart_geneinfo.R")
+# (bm <- mart_geneinfo())
 
 
-######################### BRAIN EXPRESSION oF GENES #######################################
 
-(GTEX_Median_gene_level_TPM_by_tissue <-
-   fread("/mnt/orca/emanuele/GTEx/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct.gz") %>%
-    dplyr::rename(ensembl_gene_id=Name) %>% mutate(ensembl_gene_id=str_extract(string = ensembl_gene_id, pattern = "[^\\.]+"), 
-         gene_symbol=Description, Description=NULL)
-   )
-names(GTEX_Median_gene_level_TPM_by_tissue)
 
-#calculate calc_Tau tissue spec from https://academic.oup.com/bib/article/18/2/205/2562739
+##load enh data
+# ENH coordinates and names
+(enh_names_coord_hg19 <- fread("/mnt/biggley/home/radina/FANTOM5_EP_associations/EP_hg19/data/processed/FANTOM5_hg19_enhancers.bed",
+      col.names = c("chr", "start", "end", "name", "score", "strand") ) %>% 
+   dplyr::select(chr, start, end, enh=name, score, strand) %>% as_tibble() 
+  )
 
-#Function require a vector with expression of one gene in different tissues.
-#If expression for one tissue is not known, gene specificity for this gene is NA
-#Minimum 2 tissues
-fcalc_Tau <- function(x)
-{
-	if(all(!is.na(x)))
- 	{
- 		if(min(x, na.rm=TRUE) >= 0)
-		{
- 			if(max(x)!=0)
- 			{
- 				x <- (1-(x/max(x)))
- 				res <- sum(x, na.rm=TRUE)
- 				res <- res/(length(x)-1)
- 			} else {
- 				res <- 0
- 			}
- 		} else {
- 		res <- NA
- 		#print("Expression values have to be positive!")
- 		} 
- 	} else {
- 		res <- NA
- 		#print("No data for this gene avalable.")
- 	} 
- 	return(res)
+# #add flanking region
+# (qeiruoy = slice_head(enh_names_coord_hg19, n = 10))
+# qeiruoy = fread("text.csv")%>% as_tibble()
+enh_names_coord_hg19 = enh_names_coord_hg19 %>% 
+   arrange(chr, start)
+enh_names_coord_hg19$Lstart = NA
+enh_names_coord_hg19$Lend = NA
+enh_names_coord_hg19$type = NA
+for (row in 1:nrow(enh_names_coord_hg19)){
+  print (row)
+  # print (enh_names_coord_hg19[row,])
+  if (row==1){
+    enh_names_coord_hg19[row,]$Lstart = enh_names_coord_hg19[row,]$start - 100
+    enh_names_coord_hg19[row,]$Lend = 
+      ifelse(test = abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start) < 200, 
+             yes = enh_names_coord_hg19[row,]$end + round(abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start)/2),
+             no = enh_names_coord_hg19[row,]$end + 100)
+    enh_names_coord_hg19[row,]$type = enh_names_coord_hg19[row,]$Lend - enh_names_coord_hg19[row + 1,]$start
+  } else if (row>1 & row<nrow(enh_names_coord_hg19)){
+    enh_names_coord_hg19[row,]$Lstart = 
+      ifelse(test = abs(enh_names_coord_hg19[row,]$start - enh_names_coord_hg19[row - 1,]$end) < 200, 
+             yes = enh_names_coord_hg19[row - 1,]$Lend +1,
+             no = enh_names_coord_hg19[row,]$start - 100)
+    enh_names_coord_hg19[row,]$Lend = 
+      ifelse(test = abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start) < 200, 
+             yes = enh_names_coord_hg19[row,]$end + round(abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start)/2),
+             no = enh_names_coord_hg19[row,]$end + 100)
+    enh_names_coord_hg19[row,]$type = enh_names_coord_hg19[row,]$Lend - enh_names_coord_hg19[row+1,]$start
+  } else {
+    enh_names_coord_hg19[row,]$Lstart = 
+      ifelse(test = abs(enh_names_coord_hg19[row,]$start - enh_names_coord_hg19[row - 1,]$end) < 200, 
+             yes = enh_names_coord_hg19[row - 1,]$Lend +1,
+             no = enh_names_coord_hg19[row,]$start - 100)
+    enh_names_coord_hg19[row,]$Lend =   enh_names_coord_hg19[row,]$end + 100
+    
+  }
 }
+enh_names_coord_hg19
 
-GTEX_Median_gene_level_TPM_by_tissue$calc_Tau <- 
-  apply(dplyr::select(GTEX_Median_gene_level_TPM_by_tissue,!matches("ensembl_gene_id|gene_symbol", perl = T)), 1, fcalc_Tau)
-
-
-(average_TPM_brain_non_brain<-
-  as_tibble(GTEX_Median_gene_level_TPM_by_tissue, .name_repair = c( "universal", "minimal")) %>% 
-  rowwise() %>%
-  mutate(
-    GTEx_brain_mean = mean(c_across(starts_with("Brain")), na.rm = TRUE),
-    brain_sd = sd(c_across(starts_with("Brain")), na.rm = TRUE),
-    GTEx_othertissue_mean = mean(c_across(!matches("Brain|ensembl_gene_id|gene_symbol|calc_Tau", perl = T)), na.rm = TRUE),
-    othertissue_sd = sd(c_across(!matches("Brain|ensembl_gene_id|gene_symbol|calc_Tau", perl = T)), na.rm = TRUE)
-  ) %>% ungroup() %>% 
-    dplyr::select(ensembl_gene_id,gene_symbol,GTEx_brain_mean,brain_sd,GTEx_othertissue_mean,othertissue_sd,calc_Tau))
-(average_TPM_brain_non_brain<-
-    average_TPM_brain_non_brain %>%   
-    #log transform 
-    mutate(GTEx_log_brain_mean=log(GTEx_brain_mean+2.718282),
-           GTEx_log_tissue_mean=log(GTEx_othertissue_mean+2.718282),
-           brain_exp_more_than_other_tissues= ifelse(GTEx_brain_mean>GTEx_othertissue_mean,1,0),
-           brain_exp_more_than_brain_median = ifelse(GTEx_brain_mean>median(GTEx_brain_mean),1,0)
-           ) %>% 
-    #remove dups
-    group_by(ensembl_gene_id) %>% slice_max(order_by = GTEx_brain_mean, n = 1, with_ties = F) %>% ungroup() %>%
-    dplyr::select(ensembl_gene_id,
-                  GTEx_log_brain_mean,GTEx_log_tissue_mean,#GTEx_brain_mean,GTEx_othertissue_mean,
-                  brain_exp_more_than_other_tissues,brain_exp_more_than_brain_median,calc_Tau)
-  )
+(enh_names_coord_hg19 <- enh_names_coord_hg19 %>% 
+  dplyr::select(-start,-end,-type) %>% 
+  dplyr::select(chr,start = Lstart,end = Lend, enh,   score, strand))
 
 
-# pre-calculated tau for comparison from https://genomics.senescence.info/gene_expression/tau.html
-(GTEx_tau_TS_index<-fread("/mnt/orca/emanuele/GTEx/Tau_gene_V8.csv", select = c("gene_id","tau")) %>% 
-    drop_na() %>% dplyr::rename(ensembl_gene_id=gene_id))
-
-(average_TPM_brain_non_brain<-
-    average_TPM_brain_non_brain %>% left_join(GTEx_tau_TS_index) 
-)
-
-# ggplot(average_TPM_brain_non_brain, aes(x=tau, y=calc_Tau)) + geom_point()
-# cor(x=average_TPM_brain_non_brain$tau, y=average_TPM_brain_non_brain$calc_Tau, method = c("pearson", "kendall", "spearman"), use="complete.obs")
-# table(is.na(average_TPM_brain_non_brain$tau))
-#take published tau where available, and mine when not
-average_TPM_brain_non_brain[is.na(average_TPM_brain_non_brain$tau),]$tau <- 
-  average_TPM_brain_non_brain[is.na(average_TPM_brain_non_brain$tau),]$calc_Tau
-
-(average_TPM_brain_non_brain<-
-    average_TPM_brain_non_brain %>%
-    mutate(brain_exp_tissue_specific=ifelse(
-      tau>0.7 & brain_exp_more_than_other_tissues==1, 1, 0
-    ),
-    gene_tau=tau, tau=NULL, calc_Tau=NULL, brain_exp_more_than_other_tissues=NULL, brain_exp_more_than_brain_median=NULL)
-)
-
-  
-# # average_TPM_brain_non_brain %>% arrange(-GTEx_log_brain_mean)
-# gmodels::CrossTable(
-#   average_TPM_brain_non_brain$brain_exp_more_than_other_tissues,
-#   average_TPM_brain_non_brain$brain_exp_more_than_brain_median
-#   )
-# gmodels::CrossTable(
-#   average_TPM_brain_non_brain$brain_exp_tissue_specific
-#   )
-
-table(duplicated(average_TPM_brain_non_brain$ensembl_gene_id))
-hist((average_TPM_brain_non_brain$GTEx_log_brain_mean),breaks = 200)
-#hist(average_TPM_brain_non_brain$GTEx_othertissue_mean,breaks = 200)
-
-
-
-
-
-######################### PER ENH COORDINATES AND ADDING FLANK #######################################
-
-#### ONLY RUN ONCE TO ADD FLANKING REGIONS
-# ##load enh data
-# # ENH coordinates and names
-# (enh_names_coord_hg19 <- fread("/mnt/biggley/home/radina/FANTOM5_EP_associations/EP_hg19/data/processed/FANTOM5_hg19_enhancers.bed",
-#       col.names = c("chr", "start", "end", "name", "score", "strand") ) %>% 
-#    dplyr::select(chr, start, end, enh=name, score, strand) %>% as_tibble() 
-#   )
-# 
-# # #add flanking region
-# # library(GenomicRanges)
-# # (enh_names_coord_hg19<-
-# #   enh_names_coord_hg19 %>% makeGRangesFromDataFrame(keep.extra.columns = T) %>% 
-# #   resize(width=width(.) + 100, fix="start") %>% resize(width=width(.) + 100, fix="end") %>% 
-# #   as_tibble() %>% dplyr::select(chr=seqnames, start, end, enh, score, strand)
-# # )
-# # #add flanking region
-# # (qeiruoy = slice_head(enh_names_coord_hg19, n = 10))
-# # qeiruoy = fread("text.csv")%>% as_tibble()
-# enh_names_coord_hg19 = enh_names_coord_hg19 %>% 
-#    arrange(chr, start)
-# enh_names_coord_hg19$Lstart = NA
-# enh_names_coord_hg19$Lend = NA
-# enh_names_coord_hg19$type = NA
-# for (row in 1:nrow(enh_names_coord_hg19)){
-#   print (row)
-#   # print (enh_names_coord_hg19[row,])
-#   if (row==1){
-#     enh_names_coord_hg19[row,]$Lstart = enh_names_coord_hg19[row,]$start - 100
-#     enh_names_coord_hg19[row,]$Lend = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start) < 200, 
-#              yes = enh_names_coord_hg19[row,]$end + round(abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start)/2),
-#              no = enh_names_coord_hg19[row,]$end + 100)
-#     enh_names_coord_hg19[row,]$type = enh_names_coord_hg19[row,]$Lend - enh_names_coord_hg19[row + 1,]$start
-#   } else if (row>1 & row<nrow(enh_names_coord_hg19)){
-#     enh_names_coord_hg19[row,]$Lstart = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$start - enh_names_coord_hg19[row - 1,]$end) < 200, 
-#              yes = enh_names_coord_hg19[row - 1,]$Lend +1,
-#              no = enh_names_coord_hg19[row,]$start - 100)
-#     enh_names_coord_hg19[row,]$Lend = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start) < 200, 
-#              yes = enh_names_coord_hg19[row,]$end + round(abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start)/2),
-#              no = enh_names_coord_hg19[row,]$end + 100)
-#     enh_names_coord_hg19[row,]$type = enh_names_coord_hg19[row,]$Lend - enh_names_coord_hg19[row+1,]$start
-#   } else {
-#     enh_names_coord_hg19[row,]$Lstart = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$start - enh_names_coord_hg19[row - 1,]$end) < 200, 
-#              yes = enh_names_coord_hg19[row - 1,]$Lend +1,
-#              no = enh_names_coord_hg19[row,]$start - 100)
-#     enh_names_coord_hg19[row,]$Lend =   enh_names_coord_hg19[row,]$end + 100
-#     
-#   }
-# }
-# enh_names_coord_hg19
-# 
-# (enh_names_coord_hg19 <- enh_names_coord_hg19 %>% 
-#   dplyr::select(-start,-end,-type) %>% 
-#   dplyr::select(chr,start = Lstart,end = Lend, enh,   score, strand))
-# 
-# 
-# (filename<-paste0("E_P_files/",Sys.Date(),"FANTOM5_hg19_enhancers_100flank_noInternalOverlap.bed"))
-# fwrite(enh_names_coord_hg19, filename)
-
-(enh_names_coord_hg19_plus100 <- fread("E_P_files/2023-01-18FANTOM5_hg19_enhancers_100flank_noInternalOverlap.bed"))
-
-
-######################### TS EXPRESSION oF ENHANCERS #######################################
-# head (FANTOM5humanSamples)
-#CARDIAC
-(CM_samples_FANTOM5 <- FANTOM5humanSamples %>% filter(grepl("cardi|heart", sample, ignore.case = T)) %>% filter(!grepl("disease|precursor|valve|Embryonic|Fibro", sample, ignore.case = T)) %>% pull(library_id))
-
-# 
-# # NEURAL
-# (CM_samples_FANTOM5 <- FANTOM5humanSamples %>% filter(grepl("occipital_cortex|brain__adult|Neurons", sample, ignore.case = T)) %>% pull(library_id))
-
-# estimate mean TPM signal for each enhancer across cardiac myocyte samples
-(brain_neuron_FANTOM_enh_tpm <- readRDS("/mnt/biggley/home/radina/FANTOM5_EP_associations/EP_hg19/data/processed/FANTOM5_tpm_annot_enhancers.df.rds") %>%
-    as.data.frame() %>%
-    dplyr::select(all_of(CM_samples_FANTOM5)) %>%
-    rowMeans()
-)
-
-(brain_neuron_FANTOM_enh_tpm_over0 = as_tibble(brain_neuron_FANTOM_enh_tpm, rownames = "enh") %>% 
-    dplyr::rename(brain_neuron_FANTOM_enh_tpm=value) %>% dplyr::filter(brain_neuron_FANTOM_enh_tpm>0))
-
-table(duplicated(brain_neuron_FANTOM_enh_tpm_over0$enh))
-#load all SIGNIFICANT ES effect sizes
-(significant_ES_EPs_uniqueENH_gene <-   
-    # fread("/mnt/storage/radina/FANTOM5_EP_associations/EP_hg19/hg19_all_EP_pairs_genomeWide_10%FDR.txt") %>%
-    fread("/mnt/storage/radina/FANTOM5_EP_associations/EP_hg19/hg19_sig_EP_pairs_genomeWide_10%FDR_positive_effectSize_perGene.txt") %>%
-    dplyr::filter(contact==T) %>% 
-    ###take only best gene per ENH
-    group_by(enh) %>% slice_max(effect_size, n = 1, with_ties = F) %>% ungroup() %>% 
-    dplyr::select(chr, enh, effect_size, ensembl_gene_id_max=ensembl_gene_id)
-  )
-
-#MAX ES per ENH matched to gene exp
-(perEnh_info<-
-    data.table::fread("/mnt/storage/radina/FANTOM5_EP_associations/EP_hg19/perEnh_info.csv") %>% 
-    dplyr::select(enh, chr, 
-                  highestES_gene_contact_ensemblID,
-                  max_ES_perEnh_contact, max_ES_perEnh, 
-                  GRB_gal=enhancer_hg19_galGal4_GRB,GRB_mus=enhancer_hg19_mm10_GRB, 
-                  numGenes_perEnh_contact, mean_tpm_enhancer, everything()) %>% 
-    #remove ENHs not associated with any genes, e.g. max_ES_perEnh == 0
-    dplyr::filter(max_ES_perEnh>0) %>% 
-    mutate_at(c("GRB_gal", "GRB_mus"), ~replace_na(.,"0")) %>% 
-    #flag those with contact
-    mutate(ENH_with_contact=ifelse(max_ES_perEnh_contact!=0, 1, 0)) %>% 
-    mutate(max_ES_perEnh = NULL) %>% 
-    ### and for non sign ones  replace max_ES_perEnh_contact with max_ES_perEnh
-    inner_join(significant_ES_EPs_uniqueENH_gene) %>% 
-    mutate(highestES_gene_contact_ensemblID=ifelse(max_ES_perEnh_contact==0, ensembl_gene_id_max, highestES_gene_contact_ensemblID),
-           ensembl_gene_id_max = NULL,
-           max_ES_perEnh_contact = ifelse(max_ES_perEnh_contact==0,effect_size, max_ES_perEnh_contact),
-           effect_size = NULL)
-)
-
-
-
-
-(perEnh_info <-
-  perEnh_info %>% 
-    dplyr::filter (enh %in% brain_neuron_FANTOM_enh_tpm_over0$enh) %>% 
-    left_join(enh_names_coord_hg19_plus100) %>% 
-    #join with brain enh exp data
-    left_join(brain_neuron_FANTOM_enh_tpm_over0) %>% 
-    mutate(log_brain_neuron_FANTOM_enh_tpm_1plus=log(brain_neuron_FANTOM_enh_tpm+2.72),
-           brain_neuron_FANTOM_enh_tpm=NULL,
-           log_mean_FANTOM_enh_tpm_1plus = log(mean_tpm_enhancer+2.72),
-           mean_tpm_enhancer=NULL
-           )
-  )
-
-
-
-
-######################### JOIN PER ENH INFO to GENE INFO #######################################
-
-#join to GTEx TS expression data
-(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp <-
-  left_join(perEnh_info,
-             average_TPM_brain_non_brain, by=c("highestES_gene_contact_ensemblID"="ensembl_gene_id"))  %>% 
-    mutate(#max_ES_perEnh_plus1 = max_ES_perEnh+1, max_ES_perEnh = NULL,
-           max_ES_perEnh_contact_plus1 = max_ES_perEnh_contact+1, max_ES_perEnh_contact = NULL,
-           #log_max_ES_perEnh_1plus = log(max_ES_perEnh_plus1+2.718282),
-           log_max_ES_perEnh_contact_1plus = log(max_ES_perEnh_contact_plus1+2.718282),
-           maxESperEnh_contact_X_brainTGeneExp_1_21 = 
-             log_max_ES_perEnh_contact_1plus*GTEx_log_brain_mean,
-           maxESperEnh_contact_X_brainEnhFantomExp_1_7 = 
-             log_max_ES_perEnh_contact_1plus*log_brain_neuron_FANTOM_enh_tpm_1plus,
-           maxESperEnh_contact_X_brainEnhFantomExp_X_brainTGeneExp_1_32 = 
-             log_max_ES_perEnh_contact_1plus*log_brain_neuron_FANTOM_enh_tpm_1plus*GTEx_log_brain_mean
-           # log_max_ES_perEnh_plus1_times_log_exp_brain_1_20 = log_max_ES_perEnh_plus1*GTEx_log_brain_mean,
-           ) %>% 
-   dplyr::select(chr,start,end,enh,score,strand,
-            log_brain_neuron_FANTOM_enh_tpm_1_4=log_brain_neuron_FANTOM_enh_tpm_1plus, log_tissue_FANTOM_enh_tpm_1_2=log_mean_FANTOM_enh_tpm_1plus,
-            GTEx_log_brain_mean_1_8=GTEx_log_brain_mean,
-            #log_max_ES_perEnh_1_3=log_max_ES_perEnh_1plus,
-            log_max_ES_perEnh_contact_1_3=log_max_ES_perEnh_contact_1plus,
-            #max_ES_perEnh_plus1,max_ES_perEnh_contact_plus1,
-            maxESperEnh_contact_X_brainTGeneExp_1_21,maxESperEnh_contact_X_brainEnhFantomExp_1_7,maxESperEnh_contact_X_brainEnhFantomExp_X_brainTGeneExp_1_32,
-            highestES_gene_contact_ensemblID,
-            enh_GRB_gal=GRB_gal, enh_GRB_mus=GRB_mus,numGenes_perEnh_contact,
-            gene_tau,ENH_with_contact) %>% 
-   drop_na()
-  )
-head(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp)
-sapply(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp, function(x) sum(is.na(x)))
-
-# psych::describe(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp$maxESperEnh_contact_X_brainEnhFantomExp_1_7)
-# psych::describe(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp$maxESperEnh_contact_X_brainEnhFantomExp_X_brainTGeneExp_1_32 )
-
-
-names(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp)
-
-table(duplicated(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp$enh))
-
-
-(GRBsignificant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp<-significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp %>% 
-  filter(enh_GRB_mus!=0 | enh_GRB_gal!= 0))
-(noGRBsignificant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp<-significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp %>% 
-  filter(enh_GRB_mus==0 & enh_GRB_gal== 0))
-
-fwrite(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp,
-       paste0("E_P_files/",
-                       Sys.Date(),"_CARDIAC_NoFibro_9k_ENH_EXP_significant_ES_significant_contact_EPs_gene_brain_exp_plus_100_noOverlap.csv.gz"))
-
-length(unique(significant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp$enh))
-
-#Export bed:
-(bed <- enh_names_coord_hg19_plus100 %>% dplyr::filter(enh %in% GRBsignificant_ES_significant_contact_EPs_uniqueENH_gene_brain_exp$enh))
-fwrite(bed,
-       file = paste0("/mnt/storage/emanuele/ldsc_py2.7/data/EPs/",
-                       Sys.Date(),"_NEURAL_8k_GRB_ENH_EXP_significant_ES_significant_contact_EPs.bed"),
-                       sep="\t", col.names = F)
-
+(filename<-paste0("E_P_files/",Sys.Date(),"FANTOM5_hg19_enhancers_100flank_noInternalOverlap.bed"))
+fwrite(enh_names_coord_hg19, filename)
 ```
 
-Cardiac Feb 23
+Run twice, once for Neural-tissue-specific enhancers, and once for Cardiac-tissue-specific enhancers:
 
-```{r Cardiac Feb 23 }
-library(tidyverse)
-library(data.table)
-# #import annotation from Ensembl 
-# source("~/2HH/function_files/Ensembl_Mart_geneinfo.R")
-# (bm <- mart_geneinfo())
-library(CAGEr)
-data("FANTOM5humanSamples")
+```{r Tissue-specific enhancers - generate and annotate list  }
 
-
-
-######################### PER ENH COORDINATES AND ADDING FLANK #######################################
-
-#### ONLY RUN ONCE TO ADD FLANKING REGIONS
-# ##load enh data
-# # ENH coordinates and names
-# (enh_names_coord_hg19 <- fread("/mnt/biggley/home/radina/FANTOM5_EP_associations/EP_hg19/data/processed/FANTOM5_hg19_enhancers.bed",
-#       col.names = c("chr", "start", "end", "name", "score", "strand") ) %>% 
-#    dplyr::select(chr, start, end, enh=name, score, strand) %>% as_tibble() 
-#   )
-# 
-# # #add flanking region
-# # library(GenomicRanges)
-# # (enh_names_coord_hg19<-
-# #   enh_names_coord_hg19 %>% makeGRangesFromDataFrame(keep.extra.columns = T) %>% 
-# #   resize(width=width(.) + 100, fix="start") %>% resize(width=width(.) + 100, fix="end") %>% 
-# #   as_tibble() %>% dplyr::select(chr=seqnames, start, end, enh, score, strand)
-# # )
-# # #add flanking region
-# # (qeiruoy = slice_head(enh_names_coord_hg19, n = 10))
-# # qeiruoy = fread("text.csv")%>% as_tibble()
-# enh_names_coord_hg19 = enh_names_coord_hg19 %>% 
-#    arrange(chr, start)
-# enh_names_coord_hg19$Lstart = NA
-# enh_names_coord_hg19$Lend = NA
-# enh_names_coord_hg19$type = NA
-# for (row in 1:nrow(enh_names_coord_hg19)){
-#   print (row)
-#   # print (enh_names_coord_hg19[row,])
-#   if (row==1){
-#     enh_names_coord_hg19[row,]$Lstart = enh_names_coord_hg19[row,]$start - 100
-#     enh_names_coord_hg19[row,]$Lend = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start) < 200, 
-#              yes = enh_names_coord_hg19[row,]$end + round(abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start)/2),
-#              no = enh_names_coord_hg19[row,]$end + 100)
-#     enh_names_coord_hg19[row,]$type = enh_names_coord_hg19[row,]$Lend - enh_names_coord_hg19[row + 1,]$start
-#   } else if (row>1 & row<nrow(enh_names_coord_hg19)){
-#     enh_names_coord_hg19[row,]$Lstart = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$start - enh_names_coord_hg19[row - 1,]$end) < 200, 
-#              yes = enh_names_coord_hg19[row - 1,]$Lend +1,
-#              no = enh_names_coord_hg19[row,]$start - 100)
-#     enh_names_coord_hg19[row,]$Lend = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start) < 200, 
-#              yes = enh_names_coord_hg19[row,]$end + round(abs(enh_names_coord_hg19[row,]$end - enh_names_coord_hg19[row + 1,]$start)/2),
-#              no = enh_names_coord_hg19[row,]$end + 100)
-#     enh_names_coord_hg19[row,]$type = enh_names_coord_hg19[row,]$Lend - enh_names_coord_hg19[row+1,]$start
-#   } else {
-#     enh_names_coord_hg19[row,]$Lstart = 
-#       ifelse(test = abs(enh_names_coord_hg19[row,]$start - enh_names_coord_hg19[row - 1,]$end) < 200, 
-#              yes = enh_names_coord_hg19[row - 1,]$Lend +1,
-#              no = enh_names_coord_hg19[row,]$start - 100)
-#     enh_names_coord_hg19[row,]$Lend =   enh_names_coord_hg19[row,]$end + 100
-#     
-#   }
-# }
-# enh_names_coord_hg19
-# 
-# (enh_names_coord_hg19 <- enh_names_coord_hg19 %>% 
-#   dplyr::select(-start,-end,-type) %>% 
-#   dplyr::select(chr,start = Lstart,end = Lend, enh,   score, strand))
-# 
-# 
-# (filename<-paste0("E_P_files/",Sys.Date(),"FANTOM5_hg19_enhancers_100flank_noInternalOverlap.bed"))
-# fwrite(enh_names_coord_hg19, filename)
 
 (enh_names_coord_hg19_plus100 <- fread("E_P_files/2023-01-18FANTOM5_hg19_enhancers_100flank_noInternalOverlap.bed"))
 
 
 ######################### TS EXPRESSION oF ENHANCERS #######################################
-# head (FANTOM5humanSamples)
 #CARDIAC
 (CM_samples_FANTOM5 <- FANTOM5humanSamples %>% filter(grepl("cardi|heart", sample, ignore.case = T)) %>% filter(!grepl("disease|precursor|valve|Embryonic|Fibro", sample, ignore.case = T)) %>% pull(library_id))
-
 
 # # NEURAL
 # (CM_samples_FANTOM5 <- FANTOM5humanSamples %>% filter(grepl("occipital_cortex|brain__adult|Neurons", sample, ignore.case = T)) %>% pull(library_id))
 
-# estimate mean TPM signal for each enhancer across cardiac myocyte samples
+
+# estimate mean TPM signal for each enhancer across tissue samples
 (TS_FANTOM_enh_tpm <- readRDS("/mnt/biggley/home/radina/FANTOM5_EP_associations/EP_hg19/data/processed/FANTOM5_tpm_annot_enhancers.df.rds") %>%
     as.data.frame() %>%
     dplyr::select(all_of(CM_samples_FANTOM5)) %>%
@@ -482,7 +155,6 @@ data("FANTOM5humanSamples")
            )
   )
 
-# cor(x=perEnh_info$max_ES_perEnh_contact, y=perEnh_info$max_ES_perEnh, method = c("pearson", "kendall", "spearman"), use="complete.obs")
 hist((perEnh_info$log_TS_FANTOM_enh_tpm_1plus), breaks = 100)
 psych::describe(perEnh_info$log_TS_FANTOM_enh_tpm_1plus)
 table(duplicated(perEnh_info$enh))
