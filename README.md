@@ -1,8 +1,11 @@
 # Genetic effects of tissue-specific enhancers in schizophrenia and hypertrophic cardiomyopathy
 ## Doctoral thesis by Emanuele Felice Osimo for Imperial College London
-### Chapter Chapter 2 -- Schizophrenia and HCM heritability enrichment in tissue-specific enhancers
+The link to the thesis will be included once publicly deposited.
 
-This repository contains three files, which correspond to work packages:
+### Chapter Chapter 2 - Schizophrenia and HCM heritability enrichment in tissue-specific enhancers
 
-- _1_enhancer_list_generation_ is R code for generating tissue-expressed lists of enhancers based on AR+C and FANTOM5 annotations.
-- sfgd
+This repository contains the code for work contained in Chapter 2. This is divided into three files, which correspond to work packages:
+
+- _1_enhancer_list_generation.Rmd_ is R code for generating tissue-expressed lists of enhancers based on AR+C and FANTOM5 annotations.
+- _2_LDSC.sh_ is bash code for running LDSC analyses on these lists.
+- _3_LDSC_plot_results.R_ is R code for plotting LDSC results for publication.
