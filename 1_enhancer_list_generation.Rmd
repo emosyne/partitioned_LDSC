@@ -18,9 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r }
 library(tidyverse)
 library(data.table)
-# #import annotation from Ensembl
-# source("resources/Ensembl_Mart_geneinfo.R")
-# (bm <- mart_geneinfo())
+library(CAGEr)
 
 
 
@@ -33,8 +31,6 @@ library(data.table)
   )
 
 # #add flanking region
-# (qeiruoy = slice_head(enh_names_coord_hg19, n = 10))
-# qeiruoy = fread("text.csv")%>% as_tibble()
 enh_names_coord_hg19 = enh_names_coord_hg19 %>% 
    arrange(chr, start)
 enh_names_coord_hg19$Lstart = NA
