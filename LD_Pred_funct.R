@@ -71,9 +71,10 @@ head(cbind(X))
       # the matrix X times T.
 functfile = t(t(X) * T$Coefficient)
 functfile <- cbind(SNPs,functfile)
+functfile = functfile %>% mutate(sum = rowSums(across(where(is.numeric))))
 head(functfile)
 
-#   - Format of FUNCTFILE:
+#     - Format of FUNCTFILE:
 #     - Column 1: SNP ID
 #     - Column 2: per-SNP heritability
 
