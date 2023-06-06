@@ -37,9 +37,41 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
     
 #     - After running S-LDSC:
 #       1. Get h2g estimate from the *.log file.
-#       2. Get the regression coefficients from the *.results file (column 8). Divide the regression coeffients by h2g, define it as T=tau/h2g which is a vector of dimension Cx1, where C is the total number of annotations.
-#       3. From the baselineLD annotations downloaded from [here](https://data.broadinstitute.org/alkesgroup/LDSCORE/), read the annotations file baselineLD.*.annot.gz, and only keep the annotations columns (i.e. remove first 4 columns). Call this matrix X, with dimensions MxC, where M is the number of SNPs and C is the total number of annotations.
-#       4. Define the expected per-SNP heritability as a Mx1 vector (sigma2_i from the LDpred-funct manuscript) as the result from multiplying the matrix X times T.
+Total Observed scale h2: 0.3661 (0.0145)
+#       2. Get the regression coefficients from the *.results file (column 8). Divide the regression coeffients by h2g, define it as 
+#           T=tau/h2g which is a vector of dimension Cx1, where C is the total number of annotations.
+coeffs = data.table::fread("results/LDpredfunct_out/2023_06_01_baseline.results", select = c("Coefficient","Category"))%>% 
+  dplyr::filter(!grepl("Transcribed_Hoffman",Category)) %>% dplyr::select(Coefficient)
+(T = coeffs/0.3661)
+(names = data.table::fread("results/LDpredfunct_out/2023_06_01_baseline.results", select = "Category") %>% 
+    mutate(Category = gsub(x = Category, pattern = "L2_0", replacement = "") ) %>% 
+    dplyr::filter(!grepl("Transcribed_Hoffman",Category))
+)
+#       3. From the baselineLD annotations downloaded from [here](https://data.broadinstitute.org/alkesgroup/LDSCORE/), read the annotations file 
+#         baselineLD.*.annot.gz, and only keep the annotations columns (i.e. remove first 4 columns). Call this matrix X, with dimensions MxC, where M is the 
+#         number of SNPs and C is the total number of annotations.
+#create a list of the files from your target directory
+(file_list <- list.files(path="baselineLD_v2.1_annots/", pattern = "baselineLD.*.annot.gz", full.names = TRUE))
+#initiate a blank data frame, each iteration of the loop will append the data from the given file to this variable
+X <- data.frame()
+SNPs <- data.frame()
+for (i in 1:length(file_list)){
+  print (i)
+  temp_data <- data.table::fread(file_list[i], #"baselineLD_v2.1_annots//baselineLD.1.annot.gz",
+                                 select = c(names$Category))
+  temp_SNPs<- data.table::fread(file_list[i], #"baselineLD_v2.1_annots//baselineLD.1.annot.gz",
+                                select = "SNP")
+  X <- rbind(X, temp_data) 
+  SNPs <- rbind(SNPs, temp_SNPs) #for each iteration, bind the new data to the building X
+  rm(temp_data, temp_SNPs)
+}
+head(cbind(X))
+
+#       4. Define the expected per-SNP heritability as a Mx1 vector (sigma2_i from the LDpred-funct manuscript) as the result from multiplying 
+      # the matrix X times T.
+functfile = t(t(X) * T$Coefficient)
+functfile <- cbind(SNPs,functfile)
+head(functfile)
 
 #   - Format of FUNCTFILE:
 #     - Column 1: SNP ID
@@ -47,7 +79,8 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 
 #   - Use flag: --FUNCT_FILE
 
-# 3. Summary statistics file. Please check that the summary statistics contains a column for each of the following field (header is important here, important fields are highlighted in bold font, the order of the columns it is not important).
+# 3. Summary statistics file. Please check that the summary statistics contains a column for each of the following field (header is important here, 
+#     important fields are highlighted in bold font, the order of the columns it is not important).
 #     - **CHR**   Chromosome
 #     - **SNP**   SNP ID
 #     - **BP**    Physical position (base-pair)
@@ -95,26 +128,22 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 
 #   - Use flag: --out
   
-# ### Example
-# ```
-# #convert files to ped:
-# plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample.bgen ref-first \
-#         --rm-dup force-first --recode ped \
-#         --out ../private_input_files/BB_imputed_data_sample/ped/c22_b0_testsubsample
-        
-# plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
-# outCoord="my_analysis/Coord_Final"
-# statsfile="my_analysis/sumary_statistics.txt"
-# functfile="my_analysis/functfile_sldsc.txt"
-# outLdpredfunct="my_analysis/ldpredfunct_posterior_means"
-# outValidate="my_analysis/ldpredfunct_prs"
-# phenotype="my_analysis/trait_1.txt"
-# N=training sample size
-# h2= pre-computed SNP heritability
+### Example
+```
+
+plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
+outCoord="my_analysis/Coord_Final"
+statsfile="my_analysis/sumary_statistics.txt"
+functfile="my_analysis/functfile_sldsc.txt"
+outLdpredfunct="my_analysis/ldpredfunct_posterior_means"
+outValidate="my_analysis/ldpredfunct_prs"
+phenotype="my_analysis/trait_1.txt"
+N=training sample size
+h2= pre-computed SNP heritability
 
 # optional flags:
 # --ld_radius= Pre-defined ld-radius
 # --K= Number of bins for LDpred-funct
 
-# python LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
-# ```
+python LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
+```

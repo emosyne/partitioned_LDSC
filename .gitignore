@@ -7,3 +7,5 @@
 .DS_Store
 .Rhistory
 results/*
+baselineLD_*/*
+.Rproj.user
