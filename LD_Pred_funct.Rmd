@@ -1,18 +1,34 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
 ### Installing LDpred-funct
 
 # on my mac
+```{bash}
 conda create -n ldpredfunct 
 conda activate ldpredfunct
 pip install plinkio
 pip install h5py scipy
+```
+
+
 
 ### Input files
 
 # 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
 #convert files to ped:
+```{bash}
+
 plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample.bgen ref-first \
         --rm-dup force-first --recode ped \
         --out ../private_input_files/BB_imputed_data_sample/ped/c22_b0_testsubsample
+```
+
 
 #   - Example: plinkfile="my_plink_files/Final.chrom[1:22]"
  
@@ -22,6 +38,7 @@ plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample
 ## 3- The following command will allow you to partition heritability:
 
 # on mamut
+```{bash}
 storage 
 cd ldsc_py2.7
 conda activate ldsc
@@ -34,15 +51,29 @@ python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
 	--ref-ld-chr data/baseline_Osimo/baseline.\
 	--print-coefficients\
 	--out LDpredfunct_out/2023_06_01_baseline
+```
+
+
     
 #     - After running S-LDSC:
 #       1. Get h2g estimate from the *.log file.
 Total Observed scale h2: 0.3661 (0.0145)
+
+# on mac Rstudio:
+
 #       2. Get the regression coefficients from the *.results file (column 8). Divide the regression coeffients by h2g, define it as 
 #           T=tau/h2g which is a vector of dimension Cx1, where C is the total number of annotations.
+```{r}
+library(tidyverse)
+
 coeffs = data.table::fread("results/LDpredfunct_out/2023_06_01_baseline.results", select = c("Coefficient","Category"))%>% 
   dplyr::filter(!grepl("Transcribed_Hoffman",Category)) %>% dplyr::select(Coefficient)
-(T = coeffs/0.3661)
+head(coeffs)
+
+T = coeffs/0.3661
+head(T)
+
+#obtain baseline LDPred categories names
 (names = data.table::fread("results/LDpredfunct_out/2023_06_01_baseline.results", select = "Category") %>% 
     mutate(Category = gsub(x = Category, pattern = "L2_0", replacement = "") ) %>% 
     dplyr::filter(!grepl("Transcribed_Hoffman",Category))
@@ -65,14 +96,17 @@ for (i in 1:length(file_list)){
   SNPs <- rbind(SNPs, temp_SNPs) #for each iteration, bind the new data to the building X
   rm(temp_data, temp_SNPs)
 }
-head(cbind(X))
+head(cbind(SNPs, X))
 
 #       4. Define the expected per-SNP heritability as a Mx1 vector (sigma2_i from the LDpred-funct manuscript) as the result from multiplying 
       # the matrix X times T.
-functfile = t(t(X) * T$Coefficient)
-functfile <- cbind(SNPs,functfile)
-functfile = functfile %>% mutate(sum = rowSums(across(where(is.numeric))))
+sigma = as.matrix(X) %*% T$Coefficient
+head(sigma)
+#linear algebra chapters
+
+functfile <- cbind(SNPs,sigma=sigma)
 head(functfile)
+```
 
 #     - Format of FUNCTFILE:
 #     - Column 1: SNP ID
