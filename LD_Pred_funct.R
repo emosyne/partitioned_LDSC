@@ -20,8 +20,8 @@ plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample
 #     - First you will need to estimate the per-SNP heritability inferred using S-LDSC (see instructions [here](https://github.com/bulik/ldsc/wiki/Partitioned-Heritability)) under the baselineLD model (you can download Baseline-LD annotations [here](https://data.broadinstitute.org/alkesgroup/LDSCORE/)), and use the summary statistics that will be later used as training. When running S-LDSC make sure to use the --print-coefficients flag to get the regression coefficients.
 
 ## 3- The following command will allow you to partition heritability:
-# on mamut
 
+# on mamut
 storage 
 cd ldsc_py2.7
 conda activate ldsc
