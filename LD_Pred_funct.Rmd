@@ -23,9 +23,9 @@ pip install h5py scipy
 # 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
 #convert files to ped:
 ```{bash}
-
+conda activate ldpredfunct
 plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample.bgen ref-first \
-        --rm-dup force-first --recode ped \
+        --rm-dup force-first --make-bed \
         --out ../private_input_files/BB_imputed_data_sample/ped/c22_b0_testsubsample
 ```
 
@@ -124,6 +124,11 @@ head(functfile)
 #     - **P**     Asymptotic p-value  
 #     - **BETA**  Effect size
 #     - **Z**     Z-score (default). If instead of Z-score the Chi-square statistic is provided, use the flag --chisq, and **CHISQ** as column field.
+```{r}
+d = data.table::fread("../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3.tsv.gz")
+names(d)
+d %>% select(CHR=CHROM, SNP=ID, BP=POS, A1, A2, P=PVAL, )
+```
     
 
 #   - Use flag: --ssf
