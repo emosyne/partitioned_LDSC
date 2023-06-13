@@ -10,6 +10,8 @@ editor_options:
 
 # on my mac
 ```{bash}
+conda create -n "python2" python=2.7.18 ipython plinkio h5py scipy
+
 conda create -n ldpredfunct 
 conda activate ldpredfunct
 pip install plinkio
@@ -106,6 +108,8 @@ head(sigma)
 
 functfile <- cbind(SNPs,sigma=sigma)
 head(functfile)
+
+data.table::fwrite(functfile, file = "results/LDpredfunct_out/PGC_SCZ_functfile.txt", sep = "\t", col.names = TRUE)
 ```
 
 #     - Format of FUNCTFILE:
@@ -125,9 +129,19 @@ head(functfile)
 #     - **BETA**  Effect size
 #     - **Z**     Z-score (default). If instead of Z-score the Chi-square statistic is provided, use the flag --chisq, and **CHISQ** as column field.
 ```{r}
-d = data.table::fread("../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3.tsv.gz")
+d = data.table::fread("../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_OR.tsv.gz")
 names(d)
-d %>% select(CHR=CHROM, SNP=ID, BP=POS, A1, A2, P=PVAL, )
+
+# Then calculate Z:
+# log.OR / SE.log.OR
+d$Z <- d$BETA/d$SE
+# hist(d$Z)
+
+
+(d <- d %>% select(CHR, SNP, POS, A1, A2, P, BETA, Z))
+
+data.table::fwrite(d, "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt.gz", sep = " ", col.names = T)
+
 ```
     
 
@@ -138,6 +152,12 @@ d %>% select(CHR=CHROM, SNP=ID, BP=POS, A1, A2, P=PVAL, )
 #     - Column 1: FID
 #     - Column 2: phenotype
 #   - This file doesn't have a header.
+```{r}
+data.table::fread("../private_input_files/biobank/SCZ.pheno") %>% 
+  select(FID,scz) %>% data.table::fwrite("../private_input_files/biobank/SCZ_ldpredfunct.pheno", col.names = F)
+
+
+```
 
 #   - Use flag: --pf
 
@@ -172,14 +192,14 @@ d %>% select(CHR=CHROM, SNP=ID, BP=POS, A1, A2, P=PVAL, )
 ```
 
 plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
-outCoord="my_analysis/Coord_Final"
-statsfile="my_analysis/sumary_statistics.txt"
-functfile="my_analysis/functfile_sldsc.txt"
-outLdpredfunct="my_analysis/ldpredfunct_posterior_means"
-outValidate="my_analysis/ldpredfunct_prs"
-phenotype="my_analysis/trait_1.txt"
-N=training sample size
-h2= pre-computed SNP heritability
+statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt.gz"
+functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
+outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
+outCoord="results/LDpredfunct_out/Coord_Final"
+outValidate="results/LDpredfunct_out/ldpredfunct_prs"
+phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno"
+N=100000
+h2=1
 
 # optional flags:
 # --ld_radius= Pre-defined ld-radius
