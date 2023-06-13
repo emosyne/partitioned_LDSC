@@ -10,12 +10,14 @@ editor_options:
 
 # on my mac
 ```{bash}
-conda create -n "python2" python=2.7.18 ipython plinkio h5py scipy
+CONDA_SUBDIR=osx-64 conda create -n my_env_27_x86 python=2.7 
+conda activate my_env_27_x86
+pip install plinkio h5py scipy
 
 conda create -n ldpredfunct 
 conda activate ldpredfunct
-pip install plinkio
-pip install h5py scipy
+pip install plinkio h5py scipy
+
 ```
 
 
@@ -190,6 +192,8 @@ data.table::fread("../private_input_files/biobank/SCZ.pheno") %>%
   
 ### Example
 ```
+conda activate my_env_27_x86
+
 
 plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
 statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt.gz"
@@ -205,5 +209,5 @@ h2=1
 # --ld_radius= Pre-defined ld-radius
 # --K= Number of bins for LDpred-funct
 
-python LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
+/Users/eosimo/miniconda3/envs/my_env_27_x86/bin/python2 ../LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
 ```
