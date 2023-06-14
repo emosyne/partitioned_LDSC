@@ -10,11 +10,12 @@ editor_options:
 
 # on MAMUT to use python 2.7
 ```{bash}
-conda activate ldsc3
+conda activate ldsc
 pip install plinkio h5py scipy
 
 storage 
-cd 
+cd partitioned_LDSC/
+
 
 
 ```
@@ -26,7 +27,7 @@ cd
 # 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
 #convert files to ped:
 ```{bash}
-pyenv shell 2.7.18
+<!-- # on my mac -->
 conda activate ldpredfunct
 plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample.bgen ref-first \
         --rm-dup force-first --make-bed \
@@ -140,9 +141,9 @@ d$Z <- d$BETA/d$SE
 # hist(d$Z)
 
 
-(d <- d %>% select(CHR, SNP, POS, A1, A2, P, BETA, Z))
+(d <- d %>% select(CHR, SNP, BP=POS, A1, A2, P, BETA, Z))
 
-data.table::fwrite(d, "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt.gz", sep = " ", col.names = T)
+data.table::fwrite(d, "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt", sep = " ", col.names = T)
 
 ```
     
@@ -192,16 +193,24 @@ data.table::fread("../private_input_files/biobank/SCZ.pheno") %>%
   
 ### Example
 ```
-conda activate my_env_27_x86
+<!-- on MAMUT -->
+conda activate ldsc
+storage
+cd partitioned_LDSC/
 
-
-plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
-statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt.gz"
+plinkfile="/mnt/storage/emanuele/LDpred-funct/test/TSI_[1:22]"
+<!-- plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]" -->
+statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
+<!-- statsfile="/mnt/storage/emanuele/LDpred-funct/test/summary_statistics_traininig.txt" -->
+<!-- functfile="/mnt/storage/emanuele/LDpred-funct/test/test_functfile.txt" -->
 functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
+phenotype="/mnt/storage/emanuele/LDpred-funct/test/TSI_simulated_trait.txt"
+<!-- phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno" -->
+
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
 outCoord="results/LDpredfunct_out/Coord_Final"
 outValidate="results/LDpredfunct_out/ldpredfunct_prs"
-phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno"
+
 N=100000
 h2=1
 
@@ -209,5 +218,5 @@ h2=1
 # --ld_radius= Pre-defined ld-radius
 # --K= Number of bins for LDpred-funct
 
-/Users/eosimo/miniconda3/envs/my_env_27_x86/bin/python2 ../LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
+rm ${outCoord} && python ../LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
 ```
