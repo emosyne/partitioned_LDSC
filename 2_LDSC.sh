@@ -7,7 +7,7 @@
 #https://github.com/bulik/ldsc/wiki/Heritability-and-Genetic-Correlation
 
 ##### use ldsc v2 (py3) for munge_sumstats, use original version for LDSC. ####
-
+#MAMUT
 storage 
 cd ldsc_py3
 conda activate ldsc3

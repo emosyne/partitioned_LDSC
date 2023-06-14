@@ -8,15 +8,14 @@ editor_options:
 
 ### Installing LDpred-funct
 
-# on my mac
+# on MAMUT to use python 2.7
 ```{bash}
-CONDA_SUBDIR=osx-64 conda create -n my_env_27_x86 python=2.7 
-conda activate my_env_27_x86
+conda activate ldsc3
 pip install plinkio h5py scipy
 
-conda create -n ldpredfunct 
-conda activate ldpredfunct
-pip install plinkio h5py scipy
+storage 
+cd 
+
 
 ```
 
@@ -27,6 +26,7 @@ pip install plinkio h5py scipy
 # 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
 #convert files to ped:
 ```{bash}
+pyenv shell 2.7.18
 conda activate ldpredfunct
 plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample.bgen ref-first \
         --rm-dup force-first --make-bed \
