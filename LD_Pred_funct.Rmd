@@ -132,16 +132,22 @@ data.table::fwrite(functfile, file = "results/LDpredfunct_out/PGC_SCZ_functfile.
 #     - **BETA**  Effect size
 #     - **Z**     Z-score (default). If instead of Z-score the Chi-square statistic is provided, use the flag --chisq, and **CHISQ** as column field.
 ```{r}
-d = data.table::fread("../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_OR.tsv.gz")
-names(d)
+statsfile = data.table::fread("../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_OR.tsv.gz")
+names(statsfile)
 
 # Then calculate Z:
 # log.OR / SE.log.OR
-d$Z <- d$BETA/d$SE
+statsfile$Z <- statsfile$BETA/statsfile$SE
 # hist(d$Z)
 
 
-(d <- d %>% select(CHR, SNP, BP=POS, A1, A2, P, BETA, Z))
+(statsfile <- statsfile %>% select(CHR, SNP, BP=POS, A1, A2, P, BETA, Z))
+
+functfile = data.table::fread(file = "results/LDpredfunct_out/PGC_SCZ_functfile.txt", sep = "\t")
+
+
+
+statsfile_only_within_functfile = statsfile %>% left_join(functfile, by = c("SNP" = "SNP"))
 
 data.table::fwrite(d, "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt", sep = " ", col.names = T)
 
@@ -199,13 +205,13 @@ storage
 cd partitioned_LDSC/
 
 plinkfile="/mnt/storage/emanuele/LDpred-funct/test/TSI_[1:22]"
-<!-- plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]" -->
+# plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
 statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
-<!-- statsfile="/mnt/storage/emanuele/LDpred-funct/test/summary_statistics_traininig.txt" -->
-<!-- functfile="/mnt/storage/emanuele/LDpred-funct/test/test_functfile.txt" -->
+# statsfile="/mnt/storage/emanuele/LDpred-funct/test/summary_statistics_traininig.txt"
+# functfile="/mnt/storage/emanuele/LDpred-funct/test/test_functfile.txt"
 functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
 phenotype="/mnt/storage/emanuele/LDpred-funct/test/TSI_simulated_trait.txt"
-<!-- phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno" -->
+# phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno"
 
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
 outCoord="results/LDpredfunct_out/Coord_Final"
