@@ -132,6 +132,7 @@ data.table::fwrite(functfile, file = "results/LDpredfunct_out/PGC_SCZ_functfile.
 #     - **BETA**  Effect size
 #     - **Z**     Z-score (default). If instead of Z-score the Chi-square statistic is provided, use the flag --chisq, and **CHISQ** as column field.
 ```{r}
+library(dplyr)
 statsfile = data.table::fread("../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_OR.tsv.gz")
 names(statsfile)
 
@@ -143,13 +144,26 @@ statsfile$Z <- statsfile$BETA/statsfile$SE
 
 (statsfile <- statsfile %>% select(CHR, SNP, BP=POS, A1, A2, P, BETA, Z))
 
+
+data.table::fwrite(statsfile, "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt", sep = " ", col.names = T)
+
+
+#remove datapoiunt not in other file
+
 functfile = data.table::fread(file = "results/LDpredfunct_out/PGC_SCZ_functfile.txt", sep = "\t")
 
+statsfile_only_within_functfile = statsfile %>% inner_join(functfile, by = c("SNP" = "SNP")) %>% 
+  dplyr::select(-h2snp)
 
+functfile_only_within_statsfile = functfile %>% inner_join(statsfile, by = c("SNP" = "SNP")) %>% 
+  dplyr::select(V2=SNP, h2snp)
 
-statsfile_only_within_functfile = statsfile %>% left_join(functfile, by = c("SNP" = "SNP"))
-
-data.table::fwrite(d, "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt", sep = " ", col.names = T)
+data.table::fwrite(statsfile_only_within_functfile, 
+                   "results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt", sep = " ", 
+                   col.names = T)
+data.table::fwrite(functfile_only_within_statsfile, 
+                   "results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt", sep = "\t", 
+                   col.names = T)
 
 ```
     
@@ -205,13 +219,15 @@ storage
 cd partitioned_LDSC/
 
 plinkfile="/mnt/storage/emanuele/LDpred-funct/test/TSI_[1:22]"
-# plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
-statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
+#plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
+# statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
 # statsfile="/mnt/storage/emanuele/LDpred-funct/test/summary_statistics_traininig.txt"
+statsfile="results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt"
+functfile="results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt"
 # functfile="/mnt/storage/emanuele/LDpred-funct/test/test_functfile.txt"
-functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
+# functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
 phenotype="/mnt/storage/emanuele/LDpred-funct/test/TSI_simulated_trait.txt"
-# phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno"
+#phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno"
 
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
 outCoord="results/LDpredfunct_out/Coord_Final"
