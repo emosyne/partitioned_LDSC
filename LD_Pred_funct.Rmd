@@ -24,18 +24,6 @@ cd partitioned_LDSC/
 
 ### Input files
 
-# 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
-#convert files to ped:
-```{bash}
-<!-- # on my mac -->
-conda activate ldpredfunct
-plink2 --bgen ../private_input_files/BB_imputed_data_sample/c22_b0_testsubsample.bgen ref-first \
-        --rm-dup force-first --make-bed \
-        --out ../private_input_files/BB_imputed_data_sample/ped/c22_b0_testsubsample
-```
-
-
-#   - Example: plinkfile="my_plink_files/Final.chrom[1:22]"
  
 # 2. File with functional enrichments (see Gazal et al 2017 Nat Genet and Finucane et al 2015 Nat Genet).
 #     - First you will need to estimate the per-SNP heritability inferred using S-LDSC (see instructions [here](https://github.com/bulik/ldsc/wiki/Partitioned-Heritability)) under the baselineLD model (you can download Baseline-LD annotations [here](https://data.broadinstitute.org/alkesgroup/LDSCORE/)), and use the summary statistics that will be later used as training. When running S-LDSC make sure to use the --print-coefficients flag to get the regression coefficients.
@@ -158,17 +146,49 @@ statsfile_only_within_functfile = statsfile %>% inner_join(functfile, by = c("SN
 functfile_only_within_statsfile = functfile %>% inner_join(statsfile, by = c("SNP" = "SNP")) %>% 
   dplyr::select(V2=SNP, h2snp)
 
+(SNPs = statsfile_only_within_functfile %>% dplyr::select(SNP))
+
 data.table::fwrite(statsfile_only_within_functfile, 
                    "results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt", sep = " ", 
                    col.names = T)
 data.table::fwrite(functfile_only_within_statsfile, 
                    "results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt", sep = "\t", 
                    col.names = T)
+data.table::fwrite(SNPs, 
+                   "results/LDpredfunct_out/SNPs.txt",col.names = F)
 
 ```
     
 
 #   - Use flag: --ssf
+
+# 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
+#convert files to bimbambum:
+on mamut:
+```{bash}
+<!-- on MAMUT -->
+
+#!/bin/bash
+#
+#SBATCH --job-name=plink2
+#SBATCH --mem=100GB
+#SBATCH --partition=low
+#SBATCH --ntasks-per-node=2
+
+
+for CHR in {1..22}
+do
+  echo $CHR
+  filename="c"$CHR"_b0_v3"
+  plink2 --bgen "/mnt/orca/emanuele/biobank/genetics/imputed_data/"$filename".bgen" ref-first \
+      --sample "/mnt/orca/emanuele/biobank/genetics/imputed_data/"$filename".sample" \
+      --make-bed \
+      --keep /mnt/storage/emanuele/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
+      --out "/mnt/storage/emanuele/partitioned_LDSC/biobank_imputed_genotypes/"$filename
+done
+
+```
+#   - Example: plinkfile="my_plink_files/Final.chrom[1:22]"
 
 # 4. Phenotype file.
 #   - Format:
