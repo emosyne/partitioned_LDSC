@@ -173,7 +173,7 @@ on mamut:
 #SBATCH --job-name=plink2
 #SBATCH --mem=100GB
 #SBATCH --partition=low
-#SBATCH --ntasks-per-node=2
+#SBATCH --ntasks-per-node=16
 
 
 for CHR in {1..22}
@@ -183,7 +183,7 @@ do
   plink2 --bgen "/mnt/orca/emanuele/biobank/genetics/imputed_data/"$filename".bgen" ref-first \
       --sample "/mnt/orca/emanuele/biobank/genetics/imputed_data/"$filename".sample" \
       --make-bed \
-      --keep /mnt/storage/emanuele/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
+      --extract /mnt/storage/emanuele/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
       --out "/mnt/storage/emanuele/partitioned_LDSC/biobank_imputed_genotypes/"$filename
 done
 
