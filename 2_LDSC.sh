@@ -129,7 +129,7 @@ do
 		  --annot-file ~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz
   # done
     #Computing LD scores for each chr
-    python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py\
+    python ./ldsc.py\
       --l2\
       --thin-annot\
       --bfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
@@ -195,7 +195,7 @@ data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
 data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out stratified_LDSC_out/2023_02_14_NEURAL_GRBorNot_100flank_fix14k
+	--out ~/ldsc_temp/stratified_LDSC_out/2023_07_03_NEURAL_GRBorNot_100flank_fixnotneural
 
 
 storage 
@@ -217,7 +217,7 @@ data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
 data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.,\
 data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out stratified_LDSC_out/2023_01_31_CARDIAC_noFibro_GRBorNot_100flank
+	--out ~/ldsc_temp/stratified_LDSC_out/2023_07_03_CARDIAC_noFibro_GRBorNot_100flank_fixnotcardiac
 
 
 
