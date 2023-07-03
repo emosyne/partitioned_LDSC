@@ -124,9 +124,9 @@ do
     echo $CHR
     #Creating an annot file for each chr
     python /mnt/storage/emanuele/ldsc_py2.7/make_annot.py \
-		  --bed-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/NEURAL_14k_noGRB_significant_EPs.bed \
+		  --bed-file ~/ldsc_temp/data/EPs/2023-07-03_8k_NON_NEURAL_significant.bed \
 		  --bimfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR.bim \
-		  --annot-file /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.$CHR.annot.gz
+		  --annot-file ~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz
   # done
     #Computing LD scores for each chr
     python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py\
@@ -134,8 +134,8 @@ do
       --thin-annot\
       --bfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
       --ld-wind-cm 1\
-      --annot /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.$CHR.annot.gz\
-      --out /mnt/storage/emanuele/ldsc_py2.7/data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.$CHR
+      --annot ~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz\
+      --out ~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR
 done
 
 
@@ -189,6 +189,7 @@ data/EPs/annot_files/NEURAL_8k_GRB_Enhancers.,\
 data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.,\
 data/EPs/annot_files/21k_NEURAL_ENH_EXP_significant_ES_significant_contact_EPs.,\
 data/EPs/annot_files/notNeural_20k_100flank.,\
+~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.,\
 data/EPs/annot_files/PsychENCODE_DER_03b_PFC_enhancers_18k_100flank.,\
 data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
@@ -211,6 +212,7 @@ data/EPs/annot_files/9k_CARDIAC_noFibro_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_3k_GRB_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_6k_noGRB_Enhancers.,\
 data/EPs/annot_files/40k_notCARDIAC_Enhancers.,\
+~/ldsc_temp/data/EPs/annot_files/NON_CARDIAC_21k_significant_EPs_Jul23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
 data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.,\

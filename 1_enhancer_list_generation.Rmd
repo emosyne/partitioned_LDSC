@@ -103,7 +103,7 @@ Run twice, once for Neural-tissue-specific enhancers, and once for Cardiac-tissu
     dplyr::rename(TS_FANTOM_enh_tpm=value) %>% dplyr::filter(TS_FANTOM_enh_tpm>0))
 
 #load all SIGNIFICANT ES effect sizes
-(significant_ES_EPs_uniqueENH_gene <-   
+(significant_ES_contact_EPs_uniqueENH_gene <-   
     fread("/mnt/storage/radina/FANTOM5_EP_associations/EP_hg19/hg19_sig_EP_pairs_genomeWide_10%FDR_positive_effectSize_perGene.txt") %>%
     dplyr::filter(contact==TRUE) %>% 
     ###take only best gene per ENH
@@ -112,7 +112,7 @@ Run twice, once for Neural-tissue-specific enhancers, and once for Cardiac-tissu
   )
 
 #MAX ES per ENH matched to gene exp
-(perEnh_info<-
+(perEnh_info_significant_ES_contact_EPs_uniqueENH_gene <-
     data.table::fread("/mnt/storage/radina/FANTOM5_EP_associations/EP_hg19/perEnh_info.csv") %>% 
     dplyr::select(enh, chr, 
                   highestES_gene_contact_ensemblID,
@@ -126,7 +126,7 @@ Run twice, once for Neural-tissue-specific enhancers, and once for Cardiac-tissu
     mutate(ENH_with_contact=ifelse(max_ES_perEnh_contact!=0, 1, 0)) %>% 
     mutate(max_ES_perEnh = NULL) %>% 
     ### and for non sign ones  replace max_ES_perEnh_contact with max_ES_perEnh
-    inner_join(significant_ES_EPs_uniqueENH_gene) %>% 
+    inner_join(significant_ES_contact_EPs_uniqueENH_gene) %>% 
     mutate(highestES_gene_contact_ensemblID=ifelse(max_ES_perEnh_contact==0, ensembl_gene_id_max, highestES_gene_contact_ensemblID),
            ensembl_gene_id_max = NULL,
            max_ES_perEnh_contact = ifelse(max_ES_perEnh_contact==0,effect_size, max_ES_perEnh_contact),
@@ -136,8 +136,8 @@ Run twice, once for Neural-tissue-specific enhancers, and once for Cardiac-tissu
 
 
 
-(perEnh_info <-
-  perEnh_info %>% 
+(perEnh_info_significant_ES_contact_EPs_uniqueENH_gene_expressed <-
+  perEnh_info_significant_ES_contact_EPs_uniqueENH_gene %>% 
     dplyr::filter (enh %in% TS_FANTOM_enh_tpm_over0$enh) %>% 
     left_join(enh_names_coord_hg19_plus100) %>% 
     ##remove if NAs in max gene, i.e. non significant ENHs
@@ -145,6 +145,21 @@ Run twice, once for Neural-tissue-specific enhancers, and once for Cardiac-tissu
     #join with brain enh exp data
     left_join(TS_FANTOM_enh_tpm_over0) %>% 
     mutate(log_TS_FANTOM_enh_tpm_1plus=log(TS_FANTOM_enh_tpm+2.72),
+           TS_FANTOM_enh_tpm=NULL,
+           log_mean_FANTOM_enh_tpm_1plus = log(mean_tpm_enhancer+2.72),
+           mean_tpm_enhancer=NULL
+           )
+  )
+
+(perEnh_info_significant_ES_contact_EPs_uniqueENH_gene_NOTexpressed <-
+  perEnh_info_significant_ES_contact_EPs_uniqueENH_gene %>% 
+    dplyr::filter (!enh %in% TS_FANTOM_enh_tpm_over0$enh) %>% 
+    left_join(enh_names_coord_hg19_plus100) %>% 
+    ##remove if NAs in max gene, i.e. non significant ENHs
+    #filter(if_any(c(highestES_gene_contact_ensemblID, max_ES_perEnh_contact), complete.cases)) %>% 
+    #join with brain enh exp data
+    left_join(TS_FANTOM_enh_tpm_over0) %>% 
+    mutate(log_TS_FANTOM_enh_tpm_1plus=0,
            TS_FANTOM_enh_tpm=NULL,
            log_mean_FANTOM_enh_tpm_1plus = log(mean_tpm_enhancer+2.72),
            mean_tpm_enhancer=NULL
@@ -203,10 +218,10 @@ fwrite(significant_ES_significant_contact_EPs_uniqueENH,
 length(unique(significant_ES_significant_contact_EPs_uniqueENH$enh))
 
 #Export bed:
-(bed <- enh_names_coord_hg19_plus100 %>% dplyr::filter(enh %in% GRBsignificant_ES_significant_contact_EPs_uniqueENH$enh))
+(bed <- enh_names_coord_hg19_plus100 %>% dplyr::filter(enh %in% perEnh_info_significant_ES_contact_EPs_uniqueENH_gene_NOTexpressed$enh))
 fwrite(bed,
-       file = paste0("/mnt/storage/emanuele/ldsc_py2.7/data/EPs/",
-                       Sys.Date(),"_CARDIAC_GRB_ENH_EXP_significant_ES_significant_contact_EPs.bed"),
+       file = paste0("~/ldsc_temp/data/EPs/",
+                       Sys.Date(),"_NON_Cardiac_significant.bed"),
                        sep="\t", col.names = F)
 
 ```

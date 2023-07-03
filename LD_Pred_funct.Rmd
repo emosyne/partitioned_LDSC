@@ -184,7 +184,7 @@ do
       --sample "/mnt/orca/emanuele/biobank/genetics/imputed_data/"$filename".sample" \
       --make-bed \
       --extract /mnt/storage/emanuele/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
-      --out "/mnt/storage/emanuele/partitioned_LDSC/biobank_imputed_genotypes/"$filename
+      --out "/mnt/biggley/home/emanuele/biobank_imputed_genotypes/"$filename
 done
 
 ```
