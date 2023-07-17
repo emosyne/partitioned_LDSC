@@ -7,10 +7,16 @@
 #https://github.com/bulik/ldsc/wiki/Heritability-and-Genetic-Correlation
 
 ##### use ldsc v2 (py3) for munge_sumstats, use original version for LDSC. ####
-#MAMUT
-storage 
-cd ldsc_py3
-conda activate ldsc3
+# #MAMUT
+# storage 
+# cd ldsc_py3
+# conda activate ldsc3
+
+#IMPERIAL HPC
+module load anaconda3/personal
+source activate ldsc3
+cd /rds/general/user/eosimo/home/lenhard_prs/ldsc_py3
+
 
 zcat gwas/PGC3_SCZ_wave3.european.autosome.public.v3.vcf.tsv.gz | tail -n +74 |\
     gzip > gwas/PGC3_SCZ_wave3.european.autosome.public.v3.tsv.gz
@@ -19,13 +25,13 @@ munge_sumstats.py \
     --sumstats gwas/PGC3_SCZ_wave3.european.autosome.public.v3.tsv \
     --snp ID --N-cas-col NCAS --N-con-col NCON --p PVAL \
     --merge-alleles data/w_hm3.snplist \
-    --out /mnt/storage/emanuele/ldsc_py2.7/gwas/formatted_hapmap/PGC3_SCZ_wave3_european_autosome_v3_py3
+    --out gwas/formatted_hapmap/PGC3_SCZ_wave3_european_autosome_v3_py3
 
 munge_sumstats.py \
     --sumstats gwas/hcm.gwama.sumstats_hg19_24Feb21.tsv \
     --signed-sumstats Z,0\
     --merge-alleles data/w_hm3.snplist \
-    --out /mnt/storage/emanuele/ldsc_py2.7/gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3
+    --out gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3
 
 
 # ONLY ONCE
@@ -40,13 +46,13 @@ done
 #create baseline files matched to modern BIM and my annot files
 for(i in c(1:22)){
   print(i)
-  (baseline_annot<-data.table::fread(paste0("/mnt/storage/emanuele/ldsc_py2.7/data/baseline/baseline.",i,".annot.gz")) %>% 
+  (baseline_annot<-data.table::fread(paste0("data/baseline/baseline.",i,".annot.gz")) %>% 
       dplyr::select(-CM)    )
-  (bim<- data.table::fread(paste0("/mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.",i,".bim"),
+  (bim<- data.table::fread(paste0("data/1000G_EUR_Phase3_plink/1000G.EUR.QC.",i,".bim"),
                            header = F,col.names = c("CHR","SNP" ,"CM", "BP" ,"A1","A2")) %>% 
       dplyr::select(-A1,-A2))
   
-  (EPs_annot<-data.table::fread(paste0("/mnt/storage/emanuele/ldsc_py2.7/data/EPs/ALL_BRAIN_EPs.",i,".annot.gz")))
+  (EPs_annot<-data.table::fread(paste0("data/EPs/ALL_BRAIN_EPs.",i,".annot.gz")))
   (EPs_annot <- cbind( bim[,c(1,4,2,3)], EPs_annot) %>% rename(EPs=ANNOT))
   
   (merge<-left_join(EPs_annot,baseline_annot, by=c("CHR","SNP" ,"BP")))
@@ -63,7 +69,7 @@ for(i in c(1:22)){
   
   data.table::fwrite(
     base_merged, 
-    file = paste0("/mnt/storage/emanuele/ldsc_py2.7/data/baseline_Osimo/baseline.",i,".annot.gz"), sep = "\t"
+    file = paste0("data/baseline_Osimo/baseline.",i,".annot.gz"), sep = "\t"
   )
 }
 for CHR in {1..22}
@@ -111,31 +117,45 @@ done
 
 #Step 1: Creating an annot file for EPs
 # and #Computing LD scores
-storage 
-cd ldsc_py2.7
-conda activate ldsc
+
+## MAMUT
+# storage 
+# cd ldsc_py2.7
+# conda activate ldsc
+
+#IMPERIAL HPC
+
+#!/bin/bash
+#PBS -lselect=1:ncpus=12:mem=500gb
+#PBS -lwalltime=22:0:0
+#PBS -N ldsc
+
+module load anaconda3/personal
+conda deactivate
+source activate ldsc
+cd /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7
 
 # cd data/EPs/
-for CHR in {1..22}
+for CHR in {9..9}
 do
   # for bedfile in uniq_*.bed
   # do
   # echo $bedfile
     echo $CHR
     #Creating an annot file for each chr
-    python /mnt/storage/emanuele/ldsc_py2.7/make_annot.py \
-		  --bed-file ~/ldsc_temp/data/EPs/2023-07-03_8k_NON_NEURAL_significant.bed \
-		  --bimfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR.bim \
-		  --annot-file ~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz
+    python make_annot.py \
+		  --bed-file data/EPs/2023-07-03_8k_NON_NEURAL_significant.bed \
+		  --bimfile data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR.bim \
+		  --annot-file data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz
   # done
     #Computing LD scores for each chr
     python ./ldsc.py\
       --l2\
       --thin-annot\
-      --bfile /mnt/storage/emanuele/ldsc_py2.7/data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
-      --ld-wind-cm 1\
-      --annot ~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz\
-      --out ~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR
+      --bfile data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
+      --ld-wind-cm 1 --yes-really \
+      --annot data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz\
+      --out data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23_test.$CHR
 done
 
 
@@ -175,35 +195,35 @@ done
 
 # https://github.com/bulik/ldsc/wiki/Partitioned-Heritability
 ## 3- The following command will allow you to partition heritability:
-storage 
-cd ldsc_py2.7
-conda activate ldsc
+module load anaconda3/personal
+source activate ldsc
+cd /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7
 
-python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
-	--h2 gwas/formatted_hapmap/PGC3_SCZ_wave3_european_autosome_v3_py3.sumstats.gz\
-	--w-ld-chr data/weights_Osimo/weights.\
+python ldsc.py \
+	--h2 gwas/formatted_hapmap/PGC3_SCZ_wave3_european_autosome_v3_py3.sumstats.gz \
 	--overlap-annot \
-	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC.\
+  --w-ld-chr data/weights_Osimo/weights. \
+	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC. \
   --ref-ld-chr data/baseline_Osimo/baseline.,\
 data/EPs/annot_files/NEURAL_8k_GRB_Enhancers.,\
 data/EPs/annot_files/NEURAL_14k_noGRB_significant_EPs_Feb23.,\
 data/EPs/annot_files/21k_NEURAL_ENH_EXP_significant_ES_significant_contact_EPs.,\
 data/EPs/annot_files/notNeural_20k_100flank.,\
-~/ldsc_temp/data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.,\
+data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.,\
 data/EPs/annot_files/PsychENCODE_DER_03b_PFC_enhancers_18k_100flank.,\
 data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
-data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out ~/ldsc_temp/stratified_LDSC_out/2023_07_03_NEURAL_GRBorNot_100flank_fixnotneural
+data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs. \
+	--out stratified_LDSC_out/2023_07_17_NEURAL_GRBorNot_100flank_fixnotneural
 
 
 storage 
 cd ldsc_py2.7
 conda activate ldsc
 
-python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
-	--h2 /mnt/storage/emanuele/ldsc_py2.7/gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3.sumstats.gz\
+python ldsc.py \
+	--h2 gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3.sumstats.gz\
 	--w-ld-chr data/weights_Osimo/weights.\
 	--overlap-annot \
 	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC.\
@@ -212,12 +232,12 @@ data/EPs/annot_files/9k_CARDIAC_noFibro_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_3k_GRB_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_6k_noGRB_Enhancers.,\
 data/EPs/annot_files/40k_notCARDIAC_Enhancers.,\
-~/ldsc_temp/data/EPs/annot_files/NON_CARDIAC_21k_significant_EPs_Jul23.,\
+data/EPs/annot_files/NON_CARDIAC_21k_significant_EPs_Jul23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
 data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.,\
 data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out ~/ldsc_temp/stratified_LDSC_out/2023_07_03_CARDIAC_noFibro_GRBorNot_100flank_fixnotcardiac
+	--out stratified_LDSC_out/2023_07_03_CARDIAC_noFibro_GRBorNot_100flank_fixnotcardiac
 
 
 
