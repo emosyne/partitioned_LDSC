@@ -126,12 +126,11 @@ done
 #IMPERIAL HPC
 
 #!/bin/bash
-#PBS -lselect=1:ncpus=12:mem=500gb
-#PBS -lwalltime=22:0:0
+#PBS -lselect=1:ncpus=2:mem=50gb
+#PBS -lwalltime=2:0:0
 #PBS -N ldsc
 
 module load anaconda3/personal
-conda deactivate
 source activate ldsc
 cd /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7
 
@@ -149,13 +148,13 @@ do
 		  --annot-file data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz
   # done
     #Computing LD scores for each chr
-    python ./ldsc.py\
+    python ldsc.py\
       --l2\
       --thin-annot\
       --bfile data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
-      --ld-wind-cm 1 --yes-really \
+      --ld-wind-cm 1 \
       --annot data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz\
-      --out data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23_test.$CHR
+      --out data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR
 done
 
 
@@ -195,6 +194,12 @@ done
 
 # https://github.com/bulik/ldsc/wiki/Partitioned-Heritability
 ## 3- The following command will allow you to partition heritability:
+
+#!/bin/bash
+#PBS -lselect=1:ncpus=2:mem=50gb
+#PBS -lwalltime=2:0:0
+#PBS -N ldsc
+
 module load anaconda3/personal
 source activate ldsc
 cd /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7
