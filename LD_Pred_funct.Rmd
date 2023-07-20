@@ -8,14 +8,14 @@ editor_options:
 
 ### Installing LDpred-funct
 
-# on MAMUT to use python 2.7
+#IMPERIAL HPC
+
 ```{bash}
-conda activate ldsc
+module load anaconda3/personal
+source activate ldsc
 pip install plinkio h5py scipy
 
-storage 
-cd partitioned_LDSC/
-
+cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC
 
 
 ```
@@ -30,13 +30,13 @@ cd partitioned_LDSC/
 
 ## 3- The following command will allow you to partition heritability:
 
-# on mamut
+# on #IMPERIAL HPC
 ```{bash}
-storage 
-cd ldsc_py2.7
-conda activate ldsc
+module load anaconda3/personal
+source activate ldsc
+cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC
 
-python /mnt/storage/emanuele/ldsc_py2.7/ldsc.py \
+python /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7/ldsc.py \
 	--h2 gwas/formatted_hapmap/PGC3_SCZ_wave3_european_autosome_v3_py3.sumstats.gz\
 	--w-ld-chr data/weights_Osimo/weights.\
 	--overlap-annot \
@@ -164,27 +164,29 @@ data.table::fwrite(SNPs,
 
 # 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
 #convert files to bimbambum:
-on mamut:
+
 ```{bash}
-<!-- on MAMUT -->
+#IMPERIAL HPC
+cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/
 
 #!/bin/bash
-#
-#SBATCH --job-name=plink2
-#SBATCH --mem=100GB
-#SBATCH --partition=low
-#SBATCH --ntasks-per-node=16
+#PBS -lselect=1:ncpus=6:mem=50gb
+#PBS -lwalltime=12:0:0
+#PBS -N  plink
+
+module load anaconda3/personal
+source activate plink_plink2
 
 
 for CHR in {1..22}
 do
   echo $CHR
-  filename="c"$CHR"_b0_v3"
-  plink2 --bgen "/mnt/orca/emanuele/biobank/genetics/imputed_data/"$filename".bgen" ref-first \
-      --sample "/mnt/orca/emanuele/biobank/genetics/imputed_data/"$filename".sample" \
+  filename="ukb22828_c"$CHR"_b0_v3"
+  plink2 --bgen "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".bgen" ref-first \
+      --sample "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".sample" \
       --make-bed \
-      --extract /mnt/storage/emanuele/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
-      --out "/mnt/biggley/home/emanuele/biobank_imputed_genotypes/"$filename
+      --extract /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
+      --out "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_"$filename
 done
 
 ```
@@ -238,15 +240,15 @@ conda activate ldsc
 storage
 cd partitioned_LDSC/
 
-plinkfile="/mnt/storage/emanuele/LDpred-funct/test/TSI_[1:22]"
+plinkfile="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/TSI_[1:22]"
 #plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
 # statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
-# statsfile="/mnt/storage/emanuele/LDpred-funct/test/summary_statistics_traininig.txt"
+# statsfile="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/summary_statistics_traininig.txt"
 statsfile="results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt"
 functfile="results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt"
-# functfile="/mnt/storage/emanuele/LDpred-funct/test/test_functfile.txt"
+# functfile="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/test_functfile.txt"
 # functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
-phenotype="/mnt/storage/emanuele/LDpred-funct/test/TSI_simulated_trait.txt"
+phenotype="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/TSI_simulated_trait.txt"
 #phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno"
 
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"

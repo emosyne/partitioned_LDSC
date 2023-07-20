@@ -2,38 +2,38 @@ library(tidyverse)
 library(gridExtra)
 library(grid)
 
-setwd("~/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC")
+setwd("/Users/eosimo/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC")
 
 underspace <- function(x,...){
   gsub('_',' ',x)
 }
 
 
-##SCZ
-(results <- data.table::fread("~/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/2023_02_14_NEURAL_GRBorNot_100flank_fix14k.results") %>%
-    replace_na(list(Enrichment_p=1)) )#%>%
-    #pivot_longer(cols=!Category) )
-# table(results$Category)
-results$Category <- sub("L2_0", "", results$Category)
-
-(results <- results %>% select( c(Partition = Category,Enrichment,Enrichment_p,Prop_SNPs = Prop._SNPs,Prop_heritability = Prop._h2 )) %>%
-    filter(grepl("base|Coding|Intron|Promoter|nhancer|UTR|GRB|Non-associated|FANTOM|PsychENCODE|Brain|eQTLs", Partition)) %>%
-    filter(!grepl("extend", Partition)) %>%
-    mutate(Partition = factor(Partition, ordered = T),
-           Enrichment = Enrichment-1,
-           Enrichment_p = p.adjust(method = "BH", Enrichment_p, n = nrow(results)))
-    )
-condition = "SCZ"
-
-(plot = results[c(1:7,9:12),])
-plotname = "main"
-(plot = results[c(11,8,13:20),])
-plotname = "enhancer-based"
+# ##SCZ
+# (results <- data.table::fread("/Users/eosimo/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/results/partitioned_LDSC/2023-07-19_NEURAL_fix_non-neural_post-viva.results") %>%
+#     replace_na(list(Enrichment_p=1)) )#%>%
+#     #pivot_longer(cols=!Category) )
+# # table(results$Category)
+# results$Category <- sub("L2_0", "", results$Category)
+# 
+# (results <- results %>% select( c(Partition = Category,Enrichment,Enrichment_p,Prop_SNPs = Prop._SNPs,Prop_heritability = Prop._h2 )) %>%
+#     filter(grepl("base|Coding|Intron|Promoter|nhancer|UTR|GRB|Non-associated|FANTOM|PsychENCODE|Brain|eQTLs", Partition)) %>%
+#     filter(!grepl("extend", Partition)) %>%
+#     mutate(Partition = factor(Partition, ordered = T),
+#            Enrichment = Enrichment-1,
+#            Enrichment_p = p.adjust(method = "BH", Enrichment_p, n = nrow(results)))
+#     )
+# condition = "SCZ"
+# 
+# (plot = results[c(1:7,9:12),])
+# plotname = "main"
+# (plot = results[c(3,8,13:20),])
+# plotname = "enhancer-based"
 
 
 
 ##CARDIAC
-(results <- data.table::fread("~/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/2023_01_31_CARDIAC_noFibro_GRBorNot_100flank.results") %>%
+(results <- data.table::fread("~/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/2023_01_31_CARDIAC_noFibro_GRBorNot_100flank.result") %>%
     replace_na(list(Enrichment_p=1)) )#%>%
 #pivot_longer(cols=!Category) )
 # table(results$Category)
@@ -130,7 +130,7 @@ tot_grob = arrangeGrob(
   widths = c(1, 0.4), heights = c(0.1,1)
 )
 ggsave(
-  filename = paste0(Sys.Date(),"_",condition,"_",plotname,"_pcorr.pdf"), 
+  filename = paste0("results/partitioned_LDSC/",Sys.Date(),"_",condition,"_",plotname,"_pcorr.pdf"), 
   tot_grob,  
   width = 10, height = 5, device = "pdf", scale = 1.5)
 

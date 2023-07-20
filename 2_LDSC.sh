@@ -143,9 +143,9 @@ do
     echo $CHR
     #Creating an annot file for each chr
     python make_annot.py \
-		  --bed-file data/EPs/2023-07-03_8k_NON_NEURAL_significant.bed \
+		  --bed-file data/EPs/2023-07-03_NON_Cardiac_significant.bed \
 		  --bimfile data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR.bim \
-		  --annot-file data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz
+		  --annot-file data/EPs/annot_files/NON_CARDIAC_21k_significant_EPs_Jul23.$CHR.annot.gz
   # done
     #Computing LD scores for each chr
     python ldsc.py\
@@ -153,8 +153,8 @@ do
       --thin-annot\
       --bfile data/1000G_EUR_Phase3_plink/1000G.EUR.QC.$CHR\
       --ld-wind-cm 1 \
-      --annot data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR.annot.gz\
-      --out data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.$CHR
+      --annot data/EPs/annot_files/NON_CARDIAC_21k_significant_EPs_Jul23.$CHR.annot.gz\
+      --out data/EPs/annot_files/NON_CARDIAC_21k_significant_EPs_Jul23.$CHR
 done
 
 
@@ -218,32 +218,28 @@ data/EPs/annot_files/NON_NEURAL_8k_significant_EPs_Jul23.,\
 data/EPs/annot_files/PsychENCODE_DER_03b_PFC_enhancers_18k_100flank.,\
 data/EPs/annot_files/BRAIN_EP_eQTL_Jan23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
-data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
-data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs. \
+data/EPs/annot_files/all_FANTOM5_hg19_enhancers. \
 	--out stratified_LDSC_out/2023_07_17_NEURAL_GRBorNot_100flank_fixnotneural
 
+#data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs. \ #not working on 18 Jul 23 due to corrupt file in storage
 
-storage 
-cd ldsc_py2.7
-conda activate ldsc
+
 
 python ldsc.py \
-	--h2 gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3.sumstats.gz\
-	--w-ld-chr data/weights_Osimo/weights.\
+	--h2 gwas/formatted_hapmap/HCM_Sean_hg19_24Feb21_european_autosome_v3_py3.sumstats.gz \
+	--w-ld-chr data/weights_Osimo/weights. \
 	--overlap-annot \
-	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC.\
+	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC. \
   --ref-ld-chr data/baseline_Osimo/baseline.,\
 data/EPs/annot_files/9k_CARDIAC_noFibro_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_3k_GRB_Enhancers.,\
 data/EPs/annot_files/CARDIAC_NoFibro_6k_noGRB_Enhancers.,\
-data/EPs/annot_files/40k_notCARDIAC_Enhancers.,\
 data/EPs/annot_files/NON_CARDIAC_21k_significant_EPs_Jul23.,\
 data/EPs/annot_files/Radina_GRBs_hg19_mm10.98.50.,\
 data/EPs/annot_files/all_FANTOM5_hg19_enhancers.,\
-data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22.,\
-data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs.\
-	--out stratified_LDSC_out/2023_07_03_CARDIAC_noFibro_GRBorNot_100flank_fixnotcardiac
+data/EPs/annot_files/uniq_HEART_EP_eQTL_Nov22. \
+	--out stratified_LDSC_out/2023_07_19_CARDIAC_noFibro_GRBorNot_100flank_fixnotcardiac
 
-
-
+#data/EPs/annot_files/40k_notCARDIAC_Enhancers.,\
+# data/EPs/annot_files/2022-11-08_bed_34k_neg_enhs. \
 
