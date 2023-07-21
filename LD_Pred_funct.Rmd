@@ -207,7 +207,7 @@ done
 #   - This file doesn't have a header.
 ```{r}
 data.table::fread("../private_input_files/biobank/SCZ.pheno") %>% 
-  select(FID,scz) %>% data.table::fwrite("results/LDpredfunct_out/SCZ_ldpredfunct.pheno", col.names = F)
+  select(FID,scz) %>% data.table::fwrite("results/LDpredfunct_out/SCZ_ldpredfunct.pheno", col.names = F, sep="\t")
 
 
 ```
