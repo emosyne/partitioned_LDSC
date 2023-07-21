@@ -265,7 +265,7 @@ source activate ldsc
 cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/
 
 #plinkfile="/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_ukb22828_c[1:22]_b0_v3"
-plinkfile="../LDpred-funct/test/TSI_[1:22]"
+plinkfile="../LDpred-funct/test/TSI_[1:22]" #remember: chr6 and 7 files have errors, need to be removed
 # statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
 # statsfile="../LDpred-funct/test/summary_statistics_traininig.txt"
 statsfile="results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt"
@@ -274,6 +274,7 @@ functfile="results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt"
 # functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
 #phenotype="../LDpred-funct/test/TSI_simulated_trait.txt"
 phenotype="results/LDpredfunct_out/SCZ_ldpredfunct.pheno"
+
 
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
 outCoord="results/LDpredfunct_out/Coord_Final"
