@@ -33,7 +33,7 @@ underspace <- function(x,...){
 
 
 ##CARDIAC
-(results <- data.table::fread("~/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/2023_01_31_CARDIAC_noFibro_GRBorNot_100flank.result") %>%
+(results <- data.table::fread("/Users/eosimo/GoogleDrive/WORK/CF_PhD/NF_2HH/partitioned_LDSC/results/partitioned_LDSC/2023-07-19_CARDIAC_fix_non-cardiac_post-viva.results") %>%
     replace_na(list(Enrichment_p=1)) )#%>%
 #pivot_longer(cols=!Category) )
 # table(results$Category)
@@ -47,9 +47,9 @@ results$Category <- sub("L2_0", "", results$Category)
            Enrichment_p = p.adjust(method = "BH", Enrichment_p, n = nrow(results)))
 )
 condition = "HCM"
-(plot = results[c(1:7,9:12),])
+(plot = results[c(1:11),])
 plotname = "main"
-(plot = results[c(11,8,13:19),])
+(plot = results[c(3,12:19),])
 plotname = "enhancer-based"
 
 

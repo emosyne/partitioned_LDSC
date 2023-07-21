@@ -32,17 +32,22 @@ cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC
 
 # on #IMPERIAL HPC
 ```{bash}
+#!/bin/bash
+#PBS -lselect=1:ncpus=2:mem=50gb
+#PBS -lwalltime=2:0:0
+#PBS -N ldsc
+
 module load anaconda3/personal
 source activate ldsc
-cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC
+cd /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7/
 
-python /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7/ldsc.py \
-	--h2 gwas/formatted_hapmap/PGC3_SCZ_wave3_european_autosome_v3_py3.sumstats.gz\
-	--w-ld-chr data/weights_Osimo/weights.\
+python ldsc.py \
+	--h2 gwas/formatted_hapmap/PGC3_SCZ_wave3_european_autosome_v3_py3.sumstats.gz \
+	--w-ld-chr data/weights_Osimo/weights. \
 	--overlap-annot \
-	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC.\
-	--ref-ld-chr data/baseline_Osimo/baseline.\
-	--print-coefficients\
+	--frqfile-chr data/1000G_EUR_Phase3_plink/1000G.EUR.QC. \
+	--ref-ld-chr data/baseline_Osimo/baseline. \
+	--print-coefficients \
 	--out LDpredfunct_out/2023_06_01_baseline
 ```
 
@@ -51,6 +56,7 @@ python /rds/general/user/eosimo/home/lenhard_prs/ldsc_py2.7/ldsc.py \
 #     - After running S-LDSC:
 #       1. Get h2g estimate from the *.log file.
 Total Observed scale h2: 0.3661 (0.0145)
+
 
 # on mac Rstudio:
 
@@ -98,6 +104,7 @@ head(sigma)
 #linear algebra chapters
 
 functfile <- cbind(SNPs,sigma=sigma)
+colnames(functfile) <- c("SNP", "h2snp")
 head(functfile)
 
 data.table::fwrite(functfile, file = "results/LDpredfunct_out/PGC_SCZ_functfile.txt", sep = "\t", col.names = TRUE)
@@ -133,27 +140,26 @@ statsfile$Z <- statsfile$BETA/statsfile$SE
 (statsfile <- statsfile %>% select(CHR, SNP, BP=POS, A1, A2, P, BETA, Z))
 
 
-data.table::fwrite(statsfile, "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt", sep = " ", col.names = T)
+data.table::fwrite(statsfile, 
+                   "../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt", sep = " ")
 
 
 #remove datapoiunt not in other file
 
 functfile = data.table::fread(file = "results/LDpredfunct_out/PGC_SCZ_functfile.txt", sep = "\t")
 
-statsfile_only_within_functfile = statsfile %>% inner_join(functfile, by = c("SNP" = "SNP")) %>% 
+statsfile_only_within_functfile = statsfile %>% inner_join(functfile, by = c("SNP" = "SNP")) %>%   
   dplyr::select(-h2snp)
 
 functfile_only_within_statsfile = functfile %>% inner_join(statsfile, by = c("SNP" = "SNP")) %>% 
-  dplyr::select(V2=SNP, h2snp)
+  dplyr::select(SNP, h2snp)
 
 (SNPs = statsfile_only_within_functfile %>% dplyr::select(SNP))
 
 data.table::fwrite(statsfile_only_within_functfile, 
-                   "results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt", sep = " ", 
-                   col.names = T)
+                   "results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt", sep = " ")
 data.table::fwrite(functfile_only_within_statsfile, 
-                   "results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt", sep = "\t", 
-                   col.names = T)
+                   "results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt", sep = "\t")
 data.table::fwrite(SNPs, 
                    "results/LDpredfunct_out/SNPs.txt",col.names = F)
 
@@ -164,13 +170,13 @@ data.table::fwrite(SNPs,
 
 # 1. Plink files. **One plink file (binary PED format) per chromosome** from the validation (insert the character "[1:22]" instead of the chromsome numbers). These are used as LD-reference panel and later to compute PRS.
 #convert files to bimbambum:
-
-```{bash}
 #IMPERIAL HPC
+```{bash}
+
 cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/
 
 #!/bin/bash
-#PBS -lselect=1:ncpus=6:mem=50gb
+#PBS -lselect=1:ncpus=12:mem=100gb
 #PBS -lwalltime=12:0:0
 #PBS -N  plink
 
@@ -186,7 +192,8 @@ do
       --sample "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".sample" \
       --make-bed \
       --extract /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
-      --out "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_"$filename
+      --out "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_"$filename \
+      --memory 50000 --threads 10
 done
 
 ```
@@ -199,10 +206,13 @@ done
 #   - This file doesn't have a header.
 ```{r}
 data.table::fread("../private_input_files/biobank/SCZ.pheno") %>% 
-  select(FID,scz) %>% data.table::fwrite("../private_input_files/biobank/SCZ_ldpredfunct.pheno", col.names = F)
+  select(FID,scz) %>% data.table::fwrite("results/LDpredfunct_out/SCZ_ldpredfunct.pheno", col.names = F)
 
 
 ```
+
+#upload local files to server using git
+
 
 #   - Use flag: --pf
 
@@ -234,11 +244,18 @@ data.table::fread("../private_input_files/biobank/SCZ.pheno") %>%
 #   - Use flag: --out
   
 ### Example
-```
-<!-- on MAMUT -->
-conda activate ldsc
-storage
-cd partitioned_LDSC/
+#IMPERIAL HPC
+```{bash}
+
+#!/bin/bash
+#PBS -lselect=1:ncpus=12:mem=100gb
+#PBS -lwalltime=12:0:0
+#PBS -N  plink
+
+module load anaconda3/personal
+source activate plink_plink2
+
+cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/
 
 plinkfile="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/TSI_[1:22]"
 #plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
