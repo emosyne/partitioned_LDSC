@@ -206,12 +206,12 @@ done
 #     - Column 1: FID
 #     - Column 2: phenotype
 #   - This file doesn't have a header.
-```{r}
-data.table::fread("../private_input_files/biobank/SCZ.pheno") %>% 
-  select(FID,scz) %>% data.table::fwrite("results/LDpredfunct_out/SCZ_ldpredfunct.pheno", col.names = F, sep="\t")
+# ```{r}
+# data.table::fread("../private_input_files/biobank/SCZ.pheno") %>% 
+#   select(FID,scz) %>% data.table::fwrite("results/LDpredfunct_out/SCZ_ldpredfunct.pheno", col.names = F, sep="\t")
+# ```
 
-
-```
+or can use pheno in fam file, added above
 
 #upload local files to server using git and also rsync large files
 
@@ -255,8 +255,6 @@ rsync -rmva --progress results/* eosimo@login.hpc.ic.ac.uk:/rds/general/user/eos
 #IMPERIAL HPC
 ```{bash}
 
-#generate pheno file:
-join <(sort /rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_ukb22828_c22_b0_v3.fam) <(sort results/LDpredfunct_out/SCZ_ldpredfunct.pheno) | awk '{ print $1, $2, $3, $4, $5, $7 }' > results/LDpredfunct_out/SCZ_ldpredfunct.pheno.fam
 
 #!/bin/bash
 #PBS -lselect=1:ncpus=6:mem=100gb
@@ -276,8 +274,9 @@ statsfile="results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave
 functfile="results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt"
 # functfile="../LDpred-funct/test/test_functfile.txt"
 # functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
+#phenotype file not in use as it's in the fam file
 #phenotype="../LDpred-funct/test/TSI_simulated_trait.txt"
-phenotype="results/LDpredfunct_out/SCZ_ldpredfunct.pheno.fam"
+#phenotype="results/LDpredfunct_out/SCZ_ldpredfunct.pheno.fam"
 
 
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
