@@ -177,24 +177,25 @@ cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/
 
 #!/bin/bash
 #PBS -lselect=1:ncpus=12:mem=100gb
-#PBS -lwalltime=12:0:0
-#PBS -N  plink
+#PBS -lwalltime=18:0:0
+#PBS -N plink2_pheno
 
 module load anaconda3/personal
-source activate plink_plink2
+#source activate plink_plink2
 
 
 for CHR in {1..22}
 do
   echo $CHR
   filename="ukb22828_c"$CHR"_b0_v3"
-  plink2 --bgen "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".bgen" ref-first \
+  /rds/general/user/eosimo/home/bin/plink2 --bgen "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".bgen" 'ref-first' \
       --sample "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".sample" \
       --make-bed \
+      --pheno /rds/general/user/eosimo/home/lenhard_prs/private_input_files/biobank/SCZ.pheno \
       --rm-dup force-first 'list' \
       --extract /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
       --out "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_"$filename \
-      --memory 50000 --threads 10
+      --memory 75000 --threads 10
 done
 
 ```
@@ -254,6 +255,9 @@ rsync -rmva --progress results/* eosimo@login.hpc.ic.ac.uk:/rds/general/user/eos
 #IMPERIAL HPC
 ```{bash}
 
+#generate pheno file:
+join <(sort /rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_ukb22828_c22_b0_v3.fam) <(sort results/LDpredfunct_out/SCZ_ldpredfunct.pheno) | awk '{ print $1, $2, $3, $4, $5, $7 }' > results/LDpredfunct_out/SCZ_ldpredfunct.pheno.fam
+
 #!/bin/bash
 #PBS -lselect=1:ncpus=6:mem=100gb
 #PBS -lwalltime=2:0:0
@@ -273,7 +277,7 @@ functfile="results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt"
 # functfile="../LDpred-funct/test/test_functfile.txt"
 # functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
 #phenotype="../LDpred-funct/test/TSI_simulated_trait.txt"
-phenotype="results/LDpredfunct_out/SCZ_ldpredfunct.pheno"
+phenotype="results/LDpredfunct_out/SCZ_ldpredfunct.pheno.fam"
 
 
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
