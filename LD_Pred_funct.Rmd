@@ -191,6 +191,7 @@ do
   plink2 --bgen "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".bgen" ref-first \
       --sample "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/"$filename".sample" \
       --make-bed \
+      --rm-dup force-first 'list' \
       --extract /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/results/LDpredfunct_out/SNPs.txt \
       --out "/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_"$filename \
       --memory 50000 --threads 10
@@ -211,7 +212,13 @@ data.table::fread("../private_input_files/biobank/SCZ.pheno") %>%
 
 ```
 
-#upload local files to server using git
+#upload local files to server using git and also rsync large files
+
+```{bash}
+
+rsync -rmva --progress results/* eosimo@login.hpc.ic.ac.uk:/rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/results/
+
+```
 
 
 #   - Use flag: --pf
@@ -248,25 +255,25 @@ data.table::fread("../private_input_files/biobank/SCZ.pheno") %>%
 ```{bash}
 
 #!/bin/bash
-#PBS -lselect=1:ncpus=12:mem=100gb
-#PBS -lwalltime=12:0:0
-#PBS -N  plink
+#PBS -lselect=1:ncpus=6:mem=100gb
+#PBS -lwalltime=2:0:0
+#PBS -N ldpredfunct.py
 
 module load anaconda3/personal
-source activate plink_plink2
+source activate ldsc
 
 cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/
 
-plinkfile="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/TSI_[1:22]"
-#plinkfile="../private_input_files/BB_imputed_data_sample/ped/BB_imputed_data_sample[1:22]"
+#plinkfile="/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_ukb22828_c[1:22]_b0_v3"
+plinkfile="../LDpred-funct/test/TSI_[1:22]"
 # statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
-# statsfile="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/summary_statistics_traininig.txt"
+# statsfile="../LDpred-funct/test/summary_statistics_traininig.txt"
 statsfile="results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt"
 functfile="results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt"
-# functfile="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/test_functfile.txt"
+# functfile="../LDpred-funct/test/test_functfile.txt"
 # functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
-phenotype="/rds/general/user/eosimo/home/lenhard_prs/LDpred-funct/test/TSI_simulated_trait.txt"
-#phenotype="../private_input_files/biobank/SCZ_ldpredfunct.pheno"
+#phenotype="../LDpred-funct/test/TSI_simulated_trait.txt"
+phenotype="results/LDpredfunct_out/SCZ_ldpredfunct.pheno"
 
 outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
 outCoord="results/LDpredfunct_out/Coord_Final"
@@ -280,4 +287,5 @@ h2=1
 # --K= Number of bins for LDpred-funct
 
 rm ${outCoord} && python ../LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
+
 ```
