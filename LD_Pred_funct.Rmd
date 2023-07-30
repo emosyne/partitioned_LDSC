@@ -257,8 +257,8 @@ rsync -rmva --progress results/* eosimo@login.hpc.ic.ac.uk:/rds/general/user/eos
 
 
 #!/bin/bash
-#PBS -lselect=1:ncpus=6:mem=100gb
-#PBS -lwalltime=2:0:0
+#PBS -lselect=1:ncpus=12:mem=500gb
+#PBS -lwalltime=84:0:0
 #PBS -N ldpredfunct.py
 
 module load anaconda3/personal
@@ -266,30 +266,31 @@ source activate ldsc
 
 cd /rds/general/user/eosimo/home/lenhard_prs/partitioned_LDSC/
 
-#plinkfile="/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_ukb22828_c[1:22]_b0_v3"
-plinkfile="../LDpred-funct/test/TSI_[1:22]" #remember: chr6 and 7 files have errors, need to be removed
-# statsfile="../private_input_files/GWAS/PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8_LDpredFunct.txt"
+plinkfile="/rds/general/user/eosimo/home/lenhard_prs/biobank/imputed_chromosomes/LDpredfunct_ukb22828_c[1:22]_b0_v3"
+#plinkfile="../LDpred-funct/test/TSI_[1:22]" #remember: chr6 and 7 files have errors, need to be removed
 # statsfile="../LDpred-funct/test/summary_statistics_traininig.txt"
 statsfile="results/LDpredfunct_out/statsfile_only_within_functfile_PGC3_SCZ_wave3.european.autosome.public.v3_overInfo.8.txt"
 functfile="results/LDpredfunct_out/functfile_only_within_statsfile_SCZ.txt"
 # functfile="../LDpred-funct/test/test_functfile.txt"
-# functfile="results/LDpredfunct_out/PGC_SCZ_functfile.txt"
 #phenotype file not in use as it's in the fam file
 #phenotype="../LDpred-funct/test/TSI_simulated_trait.txt"
 #phenotype="results/LDpredfunct_out/SCZ_ldpredfunct.pheno.fam"
 
 
-outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means"
-outCoord="results/LDpredfunct_out/Coord_Final"
-outValidate="results/LDpredfunct_out/ldpredfunct_prs"
+outLdpredfunct="results/LDpredfunct_out/ldpredfunct_posterior_means2"
+outCoord="results/LDpredfunct_out/Coord_Final2"
+outValidate="ldpredfunct_prs"
 
-N=100000
-h2=1
+#Training sample size
+N=60000
+#Estimated SNP Heritability (pre-compute this using your favorite method).
+h2=0.11
 
 # optional flags:
 # --ld_radius= Pre-defined ld-radius
 # --K= Number of bins for LDpred-funct
 
-rm ${outCoord} && python ../LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=${outValidate} > ${outValidate}.log
+rm ${outCoord} && python ../LDpred-funct/ldpredfunct.py --gf=${plinkfile} --pf=${phenotype} --FUNCT_FILE=${functfile}  --coord=${outCoord} --ssf=${statsfile} --N=${N} --posterior_means=${outLdpredfunct}  --H2=${h2} --out=$$
+
 
 ```
